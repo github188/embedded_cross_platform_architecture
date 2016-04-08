@@ -15,6 +15,7 @@
 #ifndef CRS_QUEUE_H_
 #define CRS_QUEUE_H_
 
+typedef void* OsiMsgQ_t;
 /*
  * 队列的控制信息
  */
@@ -39,7 +40,7 @@ typedef enum {
 		success :	
 		fail : 	
 */
-typedef struct crs_queue_cb_t crs_queue_cb_t;
+typedef struct crs_queue_cb_s crs_queue_cb_t;
 
 /*
  * 创建队列，分配内存，并初始化
@@ -52,8 +53,7 @@ typedef struct crs_queue_cb_t crs_queue_cb_t;
 		success :	
 		fail : 	
 */
-crs_queue_cb_t *crs_create_queue(int8_t queue_size, int16_t element_size,
-		uint8_t *err_code);
+crs_queue_cb_t *crs_create_queue(int8_t queue_size, int16_t element_size, uint8_t *err_code);
 
 /*
  *将message写入队列,根据timeout_ms判断是否阻塞，0表示阻塞，非0 表示超时时间
@@ -66,7 +66,7 @@ crs_queue_cb_t *crs_create_queue(int8_t queue_size, int16_t element_size,
 		success :	
 		fail : 	
 */
-void crs_write_queue(crs_queue_cb_t* cb, void* message, int32_t timeout_ms, uint8_t *err_code);
+void crs_queue_write_to_front(crs_queue_cb_t* cb, void* message, int32_t timeout_ms, uint8_t *err_code);
 
  /*
 	function : 

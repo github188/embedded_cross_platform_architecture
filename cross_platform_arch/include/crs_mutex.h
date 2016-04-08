@@ -14,10 +14,13 @@
 #ifndef __CRS_MUTEX_H__
 #define __CRS_MUTEX_H__
 
+#include "semphr. h"
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 /*
 	function : 
 				mutex handler	

@@ -180,7 +180,7 @@ void crs_destroy_queue(crs_queue_cb_t* cb, uint8_t *err_code)
 */
 int32_t crs_queue_count(crs_queue_cb_t *cb)
 {
-	return uxQueueMessagesWaiting(cb);
+	return uxQueueMessagesWaiting(cb->queue_cb);
 }
 /*
 	function : 
@@ -194,5 +194,5 @@ int32_t crs_queue_count(crs_queue_cb_t *cb)
 
 int32_t crs_queue_spaces_available(crs_queue_cb_t *cb)
 {
-	return uxQueueSpacesAvailable(cb);
+	return uxQueueSpacesAvailable(cb->queue_cb);
 }

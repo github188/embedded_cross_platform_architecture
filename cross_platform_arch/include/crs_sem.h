@@ -27,7 +27,7 @@ extern "C"
 		success :	
 		fail : 	
 */
-typedef struct crs_sem_handler crs_sem_handler_t;
+typedef struct crs_sem_handler_s crs_sem_handler_t;
 
 /*
 	function : 

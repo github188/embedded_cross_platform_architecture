@@ -19,6 +19,8 @@ extern "C"
 {
 #endif
 
+#include "semphr.h"
+#include "crs_mem.h"
 /*
 	function : 
 		信号量的handle			
@@ -27,7 +29,10 @@ extern "C"
 		success :	
 		fail : 	
 */
-typedef struct crs_sem_handler crs_sem_handler_t;
+struct crs_sem_handler_s
+{
+	SemaphoreHandle_t sem_cb;
+};
 
 /*
 	function : 
@@ -39,7 +44,9 @@ typedef struct crs_sem_handler crs_sem_handler_t;
 		fail : 	返回NULL
 */
 crs_sem_handler_t * crs_sem_create();
-
+{
+	
+}
  /*
 	function : 
 		等待信号量触发			

@@ -14,13 +14,18 @@
 #ifndef __CRS_MUTEX_H__
 #define __CRS_MUTEX_H__
 
-#include "semphr. h"
-
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "queue.h"
+
+/*
+	"queue.h"
+	typedef void * QueueHandle_t;	
+*/
+typedef QueueHandle_t MutexHandler_t;
 /*
 	function : 
 				mutex handler	
@@ -29,6 +34,7 @@ extern "C" {
 		success :	
 		fail : 	
 */
+
 typedef struct crs_mutex_handler_s crs_mutex_handler_t;
 
  /*

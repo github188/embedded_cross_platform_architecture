@@ -1,4 +1,3 @@
-
 /*
 *crs_socket.h
 *socket management

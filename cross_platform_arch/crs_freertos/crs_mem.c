@@ -9,9 +9,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include "osi.h"
 #include "crs_mem.h"
-#include "uart_if.h"
+#include "crs_types.h"
 /*
 	function : 
 					
@@ -29,7 +28,7 @@
 
 extern void *crs_malloc(size_t size)
 {	
-    return  mem_Malloc(size);
+    return  pvPortMalloc(size);
 }
 /*
 	function : 内存分配函数
@@ -41,12 +40,11 @@ extern void *crs_malloc(size_t size)
 */
 extern void *crs_calloc(size_t nmemb, size_t size)
 {
-    char * _pt = mem_Malloc(nmemb * size); 
+    char * _pt = pvPortMalloc(nmemb * size);
     if(_pt == NULL){
 		return NULL;
     }
-
-    mem_set(_pt,0,nmemb * size);
+    memset(_pt,0,nmemb * size);
     return _pt;        
 }
 
@@ -58,9 +56,9 @@ extern void *crs_calloc(size_t nmemb, size_t size)
 	success :	释放内存空间
 	fail : 	未能释放
 */
-extern void crs_free(void *ptr)
+extern void crs_memfree(void *ptr)
 {
-    mem_Free(ptr);
+    vPortFree(ptr);
 }
 /*
 	function : 内存复制
@@ -76,7 +74,7 @@ extern void crs_free(void *ptr)
 */
 extern void *crs_memcpy(void *dest, const void *src, size_t n)
 {
-    mem_copy(dest,(void *)src,n);
+    memcpy(dest,(void *)src,n);
     return dest;
 }
 /*
@@ -93,7 +91,7 @@ extern void *crs_memcpy(void *dest, const void *src, size_t n)
 */
 extern void *crs_memset(void *s, int c, size_t n)
 {
-     mem_set(s, c, n);
+     memset(s, c, n);
      return s;
 }
 /*

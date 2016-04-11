@@ -18,14 +18,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "queue.h"
-
-/*
-	"queue.h"
-	typedef void * QueueHandle_t;	
-*/
-typedef QueueHandle_t MutexHandler_t;
 /*
 	function : 
 				mutex handler	
@@ -34,8 +26,7 @@ typedef QueueHandle_t MutexHandler_t;
 		success :	
 		fail : 	
 */
-
-typedef struct crs_mutex_handler_s crs_mutex_handler_t;
+typedef struct crs_mutex_handler_t crs_mutex_handler_t;
 
  /*
 	function : 

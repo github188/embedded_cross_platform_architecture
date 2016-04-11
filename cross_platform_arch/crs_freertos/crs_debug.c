@@ -1,5 +1,5 @@
 /*
-*debug.h
+*debug.c
 *debug manaement
 *调试的时候进行打印
 */
@@ -11,8 +11,6 @@
 		success :	
 		fail : 	
 */
-#ifndef CRS_DEBUG_H
-#define CRS_DEBUG_H
 
 #include <stdint.h>
 #include "stdio.h"
@@ -20,7 +18,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include "uart_if.h"
 #include "common.h"
 /*
 	debug打印可以选择性关闭和开启	
@@ -103,4 +100,4 @@ int32_t crs_dbg(const char *tmplate, ...)
 void crs_dbg_off(void) {
     crs_dbg_flag = 0;
 }
-#endif /* DEBUG_H_ */
+

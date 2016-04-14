@@ -5,10 +5,8 @@
 	内存的创建,删除
 */
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdarg.h>
+
+
 #include "os_dmem.h"
 #include "crs_mem.h"
 #include "crs_types.h"

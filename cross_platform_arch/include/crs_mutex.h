@@ -3,14 +3,7 @@
 *mutex management
 *mutex锁的创建,使用和删除等操作
 */
-/*
-	function : 
-					
-	input : 
-	return value : 
-		success :	
-		fail : 	
-*/
+
 #ifndef __CRS_MUTEX_H__
 #define __CRS_MUTEX_H__
 
@@ -50,6 +43,17 @@ extern crs_mutex_handler_t* crs_mutex_create(void);
 		fail : 	返回-1
 */
 extern int32_t crs_mutex_lock(crs_mutex_handler_t *mutex);
+ /*
+	function : 
+			trylock mutex
+			尝试着去加锁，如果不能加锁，则立马返回，放弃加锁
+	input : 
+			crs_mutex_handler_t *mutex
+	return value : 
+		success :	
+		fail : 	
+*/
+extern int32_t crs_mutex_trylock(crs_mutex_handler_t *mutex);
 
  /*
 	function : 
@@ -60,6 +64,8 @@ extern int32_t crs_mutex_lock(crs_mutex_handler_t *mutex);
 		success :	返回0
 		fail : 	返回-1
 */
+
+
 extern int32_t crs_mutex_unlock(crs_mutex_handler_t *mutex);
 
  /*
@@ -77,4 +83,4 @@ extern int32_t crs_mutex_destroy(crs_mutex_handler_t *mutex);
 } /* extern "C" */
 #endif
 
-#endif /* __crs_THREAD_H__ */
+#endif /* __CRS_THREAD_H__ */

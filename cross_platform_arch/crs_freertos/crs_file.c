@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "crs_file.h"
+#include "crs_types.h"
 
 struct crs_file_handler_s {
     int * fp;

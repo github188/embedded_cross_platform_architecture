@@ -2,13 +2,14 @@
 /*
   string operation functions
   string print , cpy etc
+  ucos_ii platform
 */
 
 
 #include "crs_str.h"
 #include "crs_types.h"
 #include "string.h"
-
+#include <stdarg.h>
 /*
 	function : 
 					
@@ -114,7 +115,45 @@ extern int32_t strncmp ( const char * dest, const char * src, size_t n )
 		success :	
 		fail : 	
 */
-extern void  crs_printf(char *args,...) ; 
+extern void  crs_printf(char *args,...)
+{
+	int iRet = 0;
+	char *pcBuff, *pcTemp;
+	int iSize = 256;
+
+	va_list list;
+	pcBuff = (char*)malloc(iSize);
+	if(pcBuff == NULL)
+	{
+		return ;
+	}
+	while(1)
+	{
+		va_start(list,pcFormat);
+		iRet = vsnprintf(pcBuff,iSize,pcFormat,list);
+		va_end(list);
+		if(iRet > -1 && iRet < iSize)
+		{
+			break;
+		}
+		else
+		{
+			iSize*=2;
+			if((pcTemp=realloc(pcBuff,iSize))==NULL)
+			{ 
+				iRet = -1;
+				break;
+			}
+			else
+			{
+				pcBuff=pcTemp;
+			}
+		  
+		}
+	}
+	printf(pcBuff);
+	free(pcBuff);  
+}
 /*
 	function : 
 		将可变参数格式化输出到一个字符数组			

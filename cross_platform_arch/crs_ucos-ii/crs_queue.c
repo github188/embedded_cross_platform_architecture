@@ -3,7 +3,6 @@
 *queue management
 *队列的创建,使用和删除等
 */
-#include "queue.h"
 #include "crs_types.h"
 /*
 	function : 

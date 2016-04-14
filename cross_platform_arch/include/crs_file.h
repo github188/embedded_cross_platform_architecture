@@ -13,7 +13,7 @@ extern "C"
 {
 #endif
 
-#if 0
+
 /*
  * 文件操作接口
  */
@@ -82,7 +82,7 @@ extern int32_t crs_file_seek(crs_file_handler_t *file, uint32_t pos);
  */
 extern int32_t crs_file_close(crs_file_handler_t *file);
 
-#endif
+
 #ifdef __cplusplus
 extern "C"
 {

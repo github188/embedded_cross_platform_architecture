@@ -43,24 +43,24 @@ crs_sem_handler_t * crs_sem_create();
 
  /*
 	function :
-		等待信号量触发
+		获得信号量
 	input :
 		crs_sem_handler_t *sem : 信号量的handle
 	return value :
 		success :
 		fail :
 */
-int32_t crs_sem_take(crs_sem_handler_t *sem);
+int32_t crs_sem_wait(crs_sem_handler_t *sem);
 
  /*
 	function :
-		触发信号量	power on self test
+		归还信号量
 	input :
 	return value :
 		success :
 		fail :
 */
-int32_t crs_sem_give(crs_sem_handler_t *sem);
+int32_t crs_sem_post(crs_sem_handler_t *sem);
 
  /*
 	function :

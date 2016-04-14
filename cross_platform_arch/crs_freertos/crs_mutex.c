@@ -96,6 +96,6 @@ extern int32_t crs_mutex_destroy(crs_mutex_handler_t *mutex)
 	{
 		return crs_failed;
 	}
-	crs_memfree(mutex);
+	crs_free(mutex);
 	return crs_success;
 }

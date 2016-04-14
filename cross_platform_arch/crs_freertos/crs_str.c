@@ -1,9 +1,11 @@
 /*
 	字符串操作功能
+	freertos platform
 */
 #include "string.h"
 #include "stdio.h"
 #include "crs_str.h"
+#include <stdarg.h>
 /*
 	function : 
 			求字符串长度		
@@ -101,7 +103,6 @@ extern int32_t crs_strncmp ( const char * dest, const char * src, size_t n )
 extern void  crs_printf(char *args,...)
 {
 	int iRet = 0;
-#ifndef NOTERM
 	char *pcBuff, *pcTemp;
 	int iSize = 256;
 
@@ -137,7 +138,6 @@ extern void  crs_printf(char *args,...)
 	}
 	printf(pcBuff);
 	free(pcBuff);  
-#endif
 }                  
 /*
 	function : 

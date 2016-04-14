@@ -15,6 +15,10 @@
 #ifndef CRS_QUEUE_H_
 #define CRS_QUEUE_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * 队列的控制信息
  */
@@ -42,26 +46,31 @@ typedef enum {
 typedef struct crs_queue_cb_t crs_queue_cb_t;
 
 /*
- * 创建队列，分配内存，并初始化
+ * 
  */
  /*
 	function : 
-					
+		创建队列，分配内存，并初始化			
 	input : 
+		int8_t queue_size : 队列的元素的个数
+		nt16_t element_size ：队列中每个元素的大小
+		uint8_t *err_code ：错误码，返回创建队列时返回的信息
 	return value : 
-		success :	
-		fail : 	
+		success :	返回所创建的队列的指针
+		fail : 	返回NULL
 */
-crs_queue_cb_t *crs_create_queue(int8_t queue_size, int16_t element_size,
-		uint8_t *err_code);
+crs_queue_cb_t *crs_create_queue(int8_t queue_size, int16_t element_size, uint8_t *err_code);
 
 /*
  *将message写入队列,根据timeout_ms判断是否阻塞，0表示阻塞，非0 表示超时时间
  */
  /*
 	function : 
-					
+		将message写入队列			
 	input : 
+		crs_queue_cb_t* cb
+		void* message, int32_t timeout_ms
+		uint8_t *err_code
 	return value : 
 		success :	
 		fail : 	
@@ -104,4 +113,9 @@ void crs_destroy_queue(crs_queue_cb_t* cb, uint8_t *err_code);
 */
 int crs_queue_count(crs_queue_cb_t *cb);
 
+
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 #endif /* CRS_QUEUE_H_ */

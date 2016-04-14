@@ -12,10 +12,9 @@
 		success : 返回从开机到目前的绝对时间
 		fail : 	返回0
 */
-
 #include "crs_types.h"
 
-extern int64_t crs_update_time()
+extern int64_t crs_uptime()
 {
 	int64_t timecnt = xTaskGetTickCount();
 	return timecnt * 1000;

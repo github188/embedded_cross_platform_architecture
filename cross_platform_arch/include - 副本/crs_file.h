@@ -2,7 +2,6 @@
 *file management
 *文件操作
 */
-#if 0
 #ifndef _CRS_IOOPS_H_
 #define _CRS_IOOPS_H_
 
@@ -86,8 +85,6 @@ extern int32_t crs_file_close(crs_file_handler_t *file);
 #ifdef __cplusplus
 extern "C"
 {
-#endif
-
 #endif
 
 #endif

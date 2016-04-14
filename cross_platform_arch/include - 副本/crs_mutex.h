@@ -18,8 +18,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "crs_types.h"
 /*
 	function : 
 				mutex handler	

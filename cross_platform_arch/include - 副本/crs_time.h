@@ -1,25 +1,33 @@
 /*
-*time.c
+*time.h
 *time management
 *时间的管理,计时器使用
 */
 
+#ifndef _CRS_TIME_H_
+#define _CRS_TIME_H_
  /*
 	function :
-		获取系统启动时间 us
+
+	input :
+	return value :
+		success :
+		fail :
+*/
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+ /*
+	function :
+		获取开机启动时间 单位us
 	input :
 	return value :
 		success : 返回从开机到目前的绝对时间
 		fail : 	返回0
 */
-
-#include "crs_types.h"
-
-extern int64_t crs_update_time()
-{
-	int64_t timecnt = xTaskGetTickCount();
-	return timecnt * 1000;
-}
+extern int64_t crs_update_time();
 
   /*
 	function :
@@ -29,11 +37,11 @@ extern int64_t crs_update_time()
 	return value :
 		success : 当前task会让出cpu，在睡眠microseconds后继续运行
 		fail :
-	FreeRTOS延时最少到1ms即1000us，故此处最少为1000
 */
+extern uint32_t crs_usleep(uint32_t micro_seconds);
 
-extern uint32_t crs_usleep(uint32_t microseconds)
+#ifdef __cplusplus
+extern "C"
 {
-	vTaskDelay( microseconds / 1000);
-	return 1;
-}
+#endif
+#endif

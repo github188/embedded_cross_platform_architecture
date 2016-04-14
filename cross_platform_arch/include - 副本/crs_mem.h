@@ -1,13 +1,9 @@
 /*
-*crs_mem.c
+*crs_mem.h
 *	memory management
 *	
 	内存的创建,删除
 */
-#include "stdlib.h"
-#include <stdarg.h>
-#include "crs_mem.h"
-#include "crs_types.h"
 /*
 	function : 
 					
@@ -16,17 +12,21 @@
 		success :	
 		fail : 	
 */
+#ifndef _CRS_MEM_H_
+#define _CRS_MEM_H_
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 /*
 	function : 内存分配函数
 	input : size_t size
 	success-返回所分配size_t大小空间的首地址,单位 byte
 	fail-返回NLL
 */
+extern void *crs_malloc(size_t size);
 
-extern void *crs_malloc(size_t size)
-{	
-    return  pvPortMalloc(size);
-}
 /*
 	function : 内存分配函数
 	input : size_t nmemb
@@ -35,15 +35,7 @@ extern void *crs_malloc(size_t size)
 	success-返回所分配内存的地址
 	fail-返回NULL
 */
-extern void *crs_calloc(size_t nmemb, size_t size)
-{
-    char * _pt = pvPortMalloc(nmemb * size);
-    if(_pt == NULL){
-		return NULL;
-    }
-    memset(_pt,0,nmemb * size);
-    return _pt;        
-}
+extern void *crs_calloc(size_t nmemb, size_t size);
 
 /*
 	function : 内存释放
@@ -53,10 +45,8 @@ extern void *crs_calloc(size_t nmemb, size_t size)
 	success :	释放内存空间
 	fail : 	未能释放
 */
-extern void crs_memfree(void *ptr)
-{
-    vPortFree(ptr);
-}
+extern void crs_free(void *ptr);
+
 /*
 	function : 内存复制
 		将src中前n个void *格式的内存复制到dest中,如void为char时,即将src中前n个字节的内容复制到dest中
@@ -69,11 +59,7 @@ extern void crs_memfree(void *ptr)
 		success :	
 		fail : 	
 */
-extern void *crs_memcpy(void *dest, const void *src, size_t n)
-{
-    memcpy(dest,(void *)src,n);
-    return dest;
-}
+extern void *crs_memcpy(void *dest, const void *src, size_t n);
 /*
 	function : 
 			内存赋值
@@ -86,9 +72,54 @@ extern void *crs_memcpy(void *dest, const void *src, size_t n)
 		success :	
 		fail : 	
 */
-extern void *crs_memset(void *s, int c, size_t n)
-{
-     memset(s, c, n);
-     return s;
-}
+extern void *crs_memset(void *s, int c, size_t n);
+/*
+	function : 
+			求字符串长度		
+	input : 	
+			字符串s
+	return value : 
+		success :	
+			返回s的长度,到 '\0'为止
+		fail : 	
+			返回NULL
+*/
+extern uint32_t crs_strlen(const char *s);
+/*
+	function : 
+			将字符串形式表示的数字转化为十进制数		
+	input : 
+			字符串形式的数值
+	return value : 			
+		success :
+			字符串所表示数值的大小
+		fail : 	
+			
+*/
+extern int32_t crs_atoi(const char *s);
+/*
+	function : 
+					
+	input : 
+	return value : 
+	success :	
+	fail : 	
+*/
+extern int32_t crs_vsnprintf(char *s, uint32_t size, const char *template, va_list ap);
+/*
+	function : 
+			格式化打印		
+	input : 
+			格式化数据
+	return value : 
+	success :	
+	fail : 	
+*/
+extern void  crs_printf(char *args,...) ;                   
+//TODO strlen atoi printf
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+#endif

@@ -3,15 +3,6 @@
 *debug manaement
 *调试的时候进行打印
 */
-/*
-	function : 
-					
-	input : 
-	return value : 
-		success :	
-		fail : 	
-*/
-
 #include <stdint.h>
 #include "stdio.h"
 #include <time.h>

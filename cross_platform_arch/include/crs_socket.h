@@ -147,33 +147,6 @@ extern void crs_fd_set(crs_socket_handler_t *fd, crs_fd_set_t *set);
 		fail : 	
 */
 extern void crs_fd_zero(crs_fd_set_t *set);
-/*
-	function : 
-					
-	input : 
-	return value : 
-		success :	
-		fail : 	
-*/
-extern int32_t crs_bind(crs_socket_handler_t *sock, uint16_t port);
-/*
-	function : 
-					
-	input : 
-	return value : 
-		success :	
-		fail : 	
-*/
-extern int32_t crs_listen(crs_socket_handler_t *sock, uint32_t backlog);
-/*
-	function : 
-					
-	input : 
-	return value : 
-		success :	
-		fail : 	
-*/
-extern crs_socket_handler_t *crs_accept(crs_socket_handler_t *sock);
 
 /*
 	function : 
@@ -225,7 +198,7 @@ extern int8_t* crs_inet_ntoa(const uint32_t ip, int8_t *str_ip, uint32_t str_ip_
 		success :	
 		fail : 	
 */
-extern uint32_t crs_inet_addr(const int8_t* ip);
+extern uint32_t crs_inet_aton(const int8_t* ip);
 /*
 	function : 
 					
@@ -281,6 +254,33 @@ extern uint16_t crs_ntohs(uint16_t netlong);
 */
 extern crs_socket_handler_t* crs_tcp_socket_create();
 
+/*
+	function :
+
+	input :
+	return value :
+		success :
+		fail :
+*/
+extern int32_t crs_bind(crs_socket_handler_t *sock, uint16_t port);
+/*
+	function :
+
+	input :
+	return value :
+		success :
+		fail :
+*/
+extern int32_t crs_listen(crs_socket_handler_t *sock, uint32_t backlog);
+/*
+	function :
+
+	input :
+	return value :
+		success :
+		fail :
+*/
+extern crs_socket_handler_t *crs_accept(crs_socket_handler_t *sock);
 
 /*
  * socket连接到服务器(ip+port，ip是以'\0'结尾的字符串)，超时时间为timeout_usec微秒

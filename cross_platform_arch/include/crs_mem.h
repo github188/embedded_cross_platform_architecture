@@ -87,13 +87,13 @@ extern uint8_t crs_memcmp(void *dest, void *src, size_t n);
 			将s所指向内存的前n个字节内容赋值为c
 	input : 
 			void *s : 制定内存的地址
-			int c : 所赋值的值
+			int32_t c : 所赋值的值
 			size_t n : 字节数
 	return value : 
 		success :	返回s的地址
 		fail : 	NULL
 */
-extern void *crs_memset(void *s, int c, size_t n);
+extern void *crs_memset(void *s, int32_t c, size_t n);
 
 
 

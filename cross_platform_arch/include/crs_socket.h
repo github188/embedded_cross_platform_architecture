@@ -75,7 +75,7 @@ typedef struct crs_fd_set  crs_fd_set_t;
 
 /*
 	function : 
-		该函数是用来监视文件fd集合内部的一些状态的
+		该函数用来监视文件fd集合内部的一些状态
 	input : 
 		select crs_socket_handler_t *fd[]，timeout_usec = 0表示阻塞，timeout_usec ！= 0表示超时的时间
 		当readfds ！= NULL, writefds和exceptfds均为NULL时，表示fd集合中有可读文件
@@ -85,7 +85,7 @@ typedef struct crs_fd_set  crs_fd_set_t;
 		success :	
 		fail : 	
 */
-extern int32_t crs_select(crs_socket_handler_t *fd[], uint32_t size, crs_fd_set_t *readfds, crs_fd_set_t *writefds, crs_fd_set_t *exceptfds, uint32_t *timeout_usec);
+extern int32_t crs_select(crs_socket_handler_t *fd[], crs_fd_set_t *readfds, crs_fd_set_t *writefds, crs_fd_set_t *exceptfds, uint32_t *timeout_usec);
 /*
 	function : 
 		创建文件集合			
@@ -184,8 +184,8 @@ extern crs_socket_handler_t *crs_accept(crs_socket_handler_t *sock);
 		fail : 	
 */
 typedef struct crs_sock_info_s {
-    char local_ip[16];
-    char peer_ip[16];
+    int8_t local_ip[16];
+    int8_t peer_ip[16];
     uint16_t local_port;
     uint16_t peer_port;
     uint32_t sock_type;
@@ -207,7 +207,7 @@ extern int32_t crs_getsock_info(crs_socket_handler_t *sock, crs_sock_info_t *soc
 		success :	
 		fail : 	
 */
-extern char* crs_gethostbyname(const char *name, char *ip, const size_t ip_size);
+extern int8_t* crs_gethostbyname(const int8_t *name, int8_t *ip, const size_t ip_size);
 /*
 	function : 
 					
@@ -216,7 +216,7 @@ extern char* crs_gethostbyname(const char *name, char *ip, const size_t ip_size)
 		success :	
 		fail : 	
 */
-extern char* crs_inet_ntoa(const uint32_t ip, char *str_ip, uint32_t str_ip_size);
+extern int8_t* crs_inet_ntoa(const uint32_t ip, int8_t *str_ip, uint32_t str_ip_size);
 /*
 	function : 
 					
@@ -225,7 +225,7 @@ extern char* crs_inet_ntoa(const uint32_t ip, char *str_ip, uint32_t str_ip_size
 		success :	
 		fail : 	
 */
-extern uint32_t crs_inet_addr(const char* ip);
+extern uint32_t crs_inet_addr(const int8_t* ip);
 /*
 	function : 
 					
@@ -295,7 +295,7 @@ extern crs_socket_handler_t* crs_tcp_socket_create();
 		success :	
 		fail : 	
 */
-extern int32_t crs_tcp_connect(crs_socket_handler_t *sock, char *ip, uint16_t port, uint32_t timeout_usec);
+extern int32_t crs_tcp_connect(crs_socket_handler_t *sock, int8_t *ip, uint16_t port, uint32_t timeout_usec);
 
 
 /*
@@ -366,7 +366,7 @@ extern crs_socket_handler_t* crs_udp_socket_create();
 /*
  * 加入组播组
  */
-extern int32_t crs_udp_socket_join_multicast(crs_socket_handler_t *sock, char *ip);
+extern int32_t crs_udp_socket_join_multicast(crs_socket_handler_t *sock, int8_t *ip);
 
 /*
  * 接收数据，超时时间为timeout_usec微秒
@@ -386,7 +386,7 @@ extern int32_t crs_udp_socket_join_multicast(crs_socket_handler_t *sock, char *i
 		success :	
 		fail : 	
 */
-extern int32_t crs_udp_recvfrom(crs_socket_handler_t *sock, char *ip, uint32_t ip_len, uint16_t *port, void *buf, uint32_t n, uint32_t timeout_usec);
+extern int32_t crs_udp_recvfrom(crs_socket_handler_t *sock, int8_t *ip, uint32_t ip_len, uint16_t *port, void *buf, uint32_t n, uint32_t timeout_usec);
 
 /*
  * 向ip:port发送数据：buf[0,n)， 超时时间为timeout_usec微秒
@@ -404,7 +404,7 @@ extern int32_t crs_udp_recvfrom(crs_socket_handler_t *sock, char *ip, uint32_t i
 		success :	
 		fail : 	
 */
-extern int32_t crs_udp_sendto(crs_socket_handler_t *sock, char *ip, uint16_t port, void *buf, uint32_t n, uint32_t timeout_usec);
+extern int32_t crs_udp_sendto(crs_socket_handler_t *sock, int8_t *ip, uint16_t port, void *buf, uint32_t n, uint32_t timeout_usec);
 
 #if 1
 /*

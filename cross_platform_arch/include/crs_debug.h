@@ -1,26 +1,43 @@
 /*
 *debug.h
-*debug manaement
+*debug management
 *调试的时候进行打印
+*debug打印可以选择性关闭和开启
 */
 
 #ifndef CRS_DEBUG_H
 #define CRS_DEBUG_H
-#include <stdint.h>
+
 /*
-	debug打印可以选择性关闭和开启
-	crs_debug_on开启打印调试信息
+	function : 
+		开启打印调试信息			
+	input : 
+	return value : 
+		success :	
+		fail : 	
 */
 extern void crs_dbg_on(void);
 
 /*
-	进行调试信息的打印
+	function : 
+		进行调试信息的打印			
+	input : 
+	return value : 
+		success :	
+		fail : 	
 */
-extern int32_t crs_dbg(const char* tmplate,...);
+extern int32_t crs_dbg(const int8_t* tmplate,...);
 
 /*
-	关闭调试信息的打印
+	function : 
+		关闭调试信息的打印			
+	input : 
+	return value : 
+		success :	
+		fail : 	
 */
 extern void crs_dbg_off(void);
 
-#endif /* DEBUG_H_ */
+#endif 
+/* DEBUG_H_ */
+

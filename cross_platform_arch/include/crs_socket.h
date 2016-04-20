@@ -427,7 +427,8 @@ extern int32_t crs_udp_sendto(crs_udp_socket_handler_t *sock, int8_t *ip, uint16
 	function : 
 		销毁 udp socket			
 	input : 
-	return value : 
+		crs_udp_socket_handler_t *sock : socket handle
+	return value :  无
 		success :	
 		fail : 	
 */

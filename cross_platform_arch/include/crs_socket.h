@@ -151,6 +151,7 @@ extern void crs_fd_set(crs_tcp_socket_handler_t *fd, crs_fd_set_t *set);
 		fail : 	
 */
 extern void crs_fd_zero(crs_fd_set_t *set);
+<<<<<<< HEAD
 /*
 	function : 
 		把一个本地协议地址赋予一个socket;
@@ -165,6 +166,8 @@ extern void crs_fd_zero(crs_fd_set_t *set);
 		fail : 	返回 -1
 */
 extern int32_t crs_bind(crs_tcp_socket_handler_t *sock, char *ip, uint16_t port);
+=======
+>>>>>>> 363c4997f66ae540007ea2dfec8742b285595d6d
 
 /*
 	function : 
@@ -273,6 +276,7 @@ extern uint16_t crs_ntohs(uint16_t netlong);
 extern crs_tcp_socket_handler_t* crs_tcp_socket_create();
 
 /*
+<<<<<<< HEAD
 	function : 
 		监听函数，把一个未连接的socket转换成一个被动的socket，指示内核应接受指向该socket的连接请求		
 	input : 
@@ -293,6 +297,34 @@ extern int32_t crs_listen(crs_tcp_socket_handler_t *sock, uint32_t backlog);
 		fail : 	返回 -1
 */
 extern crs_tcp_socket_handler_t *crs_accept(crs_tcp_socket_handler_t *sock);
+=======
+	function :
+
+	input :
+	return value :
+		success :
+		fail :
+*/
+extern int32_t crs_bind(crs_socket_handler_t *sock, uint16_t port);
+/*
+	function :
+
+	input :
+	return value :
+		success :
+		fail :
+*/
+extern int32_t crs_listen(crs_socket_handler_t *sock, uint32_t backlog);
+/*
+	function :
+
+	input :
+	return value :
+		success :
+		fail :
+*/
+extern crs_socket_handler_t *crs_accept(crs_socket_handler_t *sock);
+>>>>>>> 363c4997f66ae540007ea2dfec8742b285595d6d
 
 /*
  * socket连接到服务器(ip+port，ip是以'\0'结尾的字符串)，超时时间为timeout_usec微秒

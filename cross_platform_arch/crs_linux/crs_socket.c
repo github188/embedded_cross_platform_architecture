@@ -412,7 +412,10 @@ extern uint32_t crs_htonl(uint32_t hostlong)
 		success :	返回网络字节序
 		fail : 	else
 */
-extern uint16_t crs_htons(uint16_t hostlong);
+extern uint16_t crs_htons(uint16_t hostlong)
+{
+	return htons( hostlong );
+}
 /*
 	function : 
 		将32位的网络字节序转换为主机字节序
@@ -422,7 +425,10 @@ extern uint16_t crs_htons(uint16_t hostlong);
 		success :	主机字节序
 		fail : 	else
 */
-extern uint32_t crs_ntohl(uint32_t netlong);
+extern uint32_t crs_ntohl(uint32_t netlong)
+{
+	return ntonl( netlong );
+}
 /*
 	function : 
 		将16位的网络字节序转为主机字节序
@@ -432,10 +438,10 @@ extern uint32_t crs_ntohl(uint32_t netlong);
 		success :	主机字节序
 		fail : 	else
 */
-extern uint16_t crs_ntohs(uint16_t netlong);
-
-//#define SOCK_STREAM 1
-//#define SOCK_DGRAM  0
+extern uint16_t crs_ntohs(uint16_t netlong)
+{
+	return ntohs( netlong );
+}
 
 /*************************** tcp 接口 *********************************/
 
@@ -452,7 +458,8 @@ extern uint16_t crs_ntohs(uint16_t netlong);
 */
 extern crs_tcp_socket_handler_t* crs_tcp_socket_create()
 {
-	crs_tcp_socket_handler_t *socket_handle = ( crs_tcp_socket_handler_t *)crs_malloc( sizeof() )
+	crs_tcp_socket_handler_t *socket_handle = ( crs_tcp_socket_handler_t *)crs_malloc( sizeof(crs_tcp_socket_handler_t) );
+	return socket_handle;
 }
 /*
 	function : 
@@ -464,7 +471,14 @@ extern crs_tcp_socket_handler_t* crs_tcp_socket_create()
 		success :	返回 0 
 		fail : 	返回 -1
 */
-extern int32_t crs_listen(crs_tcp_socket_handler_t *sock, uint32_t backlog);
+extern int32_t crs_listen(crs_tcp_socket_handler_t *sock, uint32_t backlog)
+{
+    if ( listen(sock->fd, backlog) < 0 )
+    {
+        return -1;
+    }
+    return 0;
+}
 /*
 	function : 
 		由TCP服务器调用，用于从已完成连接的队列的头返回下一个已完成连接			
@@ -474,7 +488,32 @@ extern int32_t crs_listen(crs_tcp_socket_handler_t *sock, uint32_t backlog);
 		success :	返回 所接收的socket
 		fail : 	返回 -1
 */
-extern crs_tcp_socket_handler_t *crs_accept(crs_tcp_socket_handler_t *sock);
+extern crs_tcp_socket_handler_t *crs_accept(crs_tcp_socket_handler_t *sock)
+{
+    char str_ip[16];
+
+	memset(str_ip, 0, 16);
+    crs_tcp_socket_handler_t *new_sock = ( crs_tcp_socket_handler_t * ) crs_malloc(sizeof(crs_tcp_socket_handler_t));
+    if ( NULL == new_sock )
+    {
+        return NULL;
+    }
+    memset(new_sock, 0, sizeof(crs_tcp_socket_handler_t));
+
+    struct sockaddr_in peeraddr;
+    uint16_t peeraddr_len;
+    new_sock->fd = accept( sock->fd, (struct sockaddr *)&peeraddr, &peeraddr_len );
+    if (0 > new_sock->fd)
+    {
+        crs_free(new_sock);
+        return NULL;
+    }
+
+    strncpy(new_sock->sock_info.peer_ip, dana_inet_ntoa(peeraddr.sin_addr.s_addr,str_ip,16), sizeof(new_sock->sock_info.peer_ip) -1);
+    new_sock->sock_info.peer_port = ntohs(peeraddr.sin_port);
+
+    return new_sock;
+}
 
 /*
  * socket连接到服务器(ip+port，ip是以'\0'结尾的字符串)，超时时间为timeout_usec微秒

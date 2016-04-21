@@ -6,6 +6,8 @@
 #include "crs_types.h"
 #include "crs_mem.h"
 #include "crs_socket.h"
+#include "crs_time.h"
+
 
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -13,7 +15,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 /*
- * TCP socket，这里read与write函数，开发者可以实现为阻塞或非阻塞模式，SDK并不关心
+ * TCP socket，这里read与write函数，发者可以实现为阻塞或非阻塞模式，SDK并不关心
  * 内部维系了read与write，不关心具体实现是否阻塞
  */
  
@@ -509,7 +511,7 @@ extern crs_tcp_socket_handler_t *crs_accept(crs_tcp_socket_handler_t *sock)
         return NULL;
     }
 
-    strncpy(new_sock->sock_info.peer_ip, dana_inet_ntoa(peeraddr.sin_addr.s_addr,str_ip,16), sizeof(new_sock->sock_info.peer_ip) -1);
+    strncpy(new_sock->sock_info.peer_ip, crs_inet_ntoa(peeraddr.sin_addr.s_addr,str_ip,16), sizeof(new_sock->sock_info.peer_ip) -1);
     new_sock->sock_info.peer_port = ntohs(peeraddr.sin_port);
 
     return new_sock;
@@ -532,7 +534,45 @@ extern crs_tcp_socket_handler_t *crs_accept(crs_tcp_socket_handler_t *sock)
 		success : 返回０
 		fail : 	返回 -1
 */
-extern int32_t crs_tcp_connect(crs_tcp_socket_handler_t *sock, int8_t *ip, uint16_t port, uint32_t timeout_usec);
+extern int32_t crs_tcp_connect(crs_tcp_socket_handler_t *sock, int8_t *ip, uint16_t port, uint32_t timeout_usec)
+{
+    int32_t fd = sock -> fd;
+    struct sockaddr_in peer_addr;
+	int val, timeout_ms;
+	val = 0;
+	timeout_ms = timeout_usec / 1000;
+    mem_set( &peer_addr, 0, sizeof( peer_addr ) );
+    peer_addr.sin_family = AF_INET;
+    peer_addr.sin_addr.s_addr = crs_inet_addr( ip );
+    peer_addr.sin_port = htons( port );
+
+    while ( 1 )
+    {
+        val = connect( fd, ( struct sockaddr *)&peer_addr, sizeof( peer_addr ) );
+		if( ( EALREADY == val ) || ( SL_POOL_IS_EMPTY == val ) )
+		{
+			if(timeout_ms > 0)
+			{
+				timeout_ms -=5;
+				crs_sleep(5);
+				continue;
+			}
+			else
+			{
+				return -1;
+			}
+		}
+		else if( val < 0 )
+		{
+			return (-1);
+		}
+		else
+		{
+			 break;
+		}
+    }
+    return val;
+}
 
  /*
 	function : 

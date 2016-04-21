@@ -1,4 +1,617 @@
-/*
+/*					linux
+*crs_socket.c
 *socket management
 *socket通信
 */
+#include "crs_types.h"
+#include "crs_mem.h"
+#include "crs_socket.h"
+
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/select.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+/*
+ * TCP socket，这里read与write函数，开发者可以实现为阻塞或非阻塞模式，SDK并不关心
+ * 内部维系了read与write，不关心具体实现是否阻塞
+ */
+ 
+/*
+	function : 
+		socket handler			
+	input : 
+	return value : 
+		success :	
+		fail : 	
+*/
+typedef struct crs_socket_handler crs_socket_handler_t;
+
+typedef crs_socket_handler_t crs_tcp_socket_handler_t;
+
+typedef crs_socket_handler_t crs_udp_socket_handler_t;
+/*
+	function : 
+		crs_fd_set 			
+	input : 
+	return value : 
+		success :	
+		fail : 	
+*/
+typedef struct crs_fd_set  crs_fd_set_t;
+
+/*
+	function : 
+		该函数用来监视文件fd集合内部的一些状态
+	input : 
+		select crs_tcp_socket_handler_t *fd[]，timeout_usec = 0表示阻塞，timeout_usec ！= 0表示超时的时间
+		当readfds ！= NULL, writefds和exceptfds均为NULL时，表示fd集合中有可读文件
+		当writefds ！= NULL, readfds和exceptfds均为NULL时，表示fd集合有可写文件
+		当exceptfds ！= NULL，writefds和readfds均为NULL时，表示监视fd集合文件错误异常
+	return value : 
+		success :	
+		fail : 	
+*/
+extern int32_t crs_select(crs_socket_handler_t *fd[], uint32_t size, crs_fd_set_t *readfds, crs_fd_set_t *writefds, crs_fd_set_t *exceptfds, uint32_t *timeout_usec)
+{
+    int32_t max_fd = 0;
+    uint32_t count = 0;
+
+    struct timeval delay;
+    crs_memset( &delay, 0, sizeof( struct timeval ) );
+    delay.tv_sec = *timeout_usec / 1000000;
+    delay.tv_usec = *timeout_usec % 1000000;
+
+    for(count = 0; count < size; ++count) {
+        if(max_fd < fd[count]->fd)
+            max_fd = fd[count]->fd;
+    }
+
+    int32_t ret = select(max_fd + 1, &(readfds->fds), &(writefds->fds), &(exceptfds->fds), &delay)
+
+    *timeout_usec = delay.tv_sec*1000000 + delay.tv_usec;
+    return ret;
+}
+/*
+	function : 
+		创建文件集合			
+	input : 
+	return value : 
+		success :	
+		fail : 	
+*/
+extern crs_fd_set_t * crs_fd_set_create()
+{
+    crs_fd_set_t *set = (crs_fd_set_t *)crs_malloc(sizeof(crs_fd_set_t));
+    crs_memset(set, 0, sizeof(crs_fd_set_t));
+    return set;
+}
+/*
+	function : 
+		销毁文件集合crs_fd_set_t handler			
+	input : 
+		crs_fd_set_t *set ： 文件集合
+	return value : 
+		success :  0
+		fail : 	-1
+*/
+extern int32_t crs_fd_set_destroy( crs_fd_set_t *set )
+{
+    if ( NULL == set )
+    {
+        return -1;
+    }
+    crs_free( set );
+    set = NULL;
+    return 0;
+}
+/*
+	function : 
+		清除文件集合中的一个fd			
+	input : 
+		文件集合crs_fd_set_t *set
+		需要清除的fd
+	return value : 
+		success :	
+		fail : 	
+*/
+extern void crs_fd_clr(crs_tcp_socket_handler_t *fd, crs_fd_set_t *set)
+{
+    if (NULL == fd)
+    {
+        return ;
+    }
+
+    if (NULL == set)
+    {
+        return ;
+    }
+
+    FD_CLR(fd->fd, &(set->fds));
+}
+/*
+	function : 
+		判断fd是否在相应的set中			
+	input : 
+		文件集合crs_fd_set_t *set
+		待判断的crs_tcp_socket_handler_t *fd		
+	return value : 
+		success :	1
+		fail : 	0
+*/
+extern int32_t crs_fd_isset(crs_tcp_socket_handler_t *fd, crs_fd_set_t *set)
+{
+    if ( NULL == fd )
+    {
+        return 0;
+    }
+
+    if ( NULL == set )
+    {
+        return 0;
+    }
+
+    return FD_ISSET( fd->fd, &( set->fds ) );
+}
+
+/*
+	function : 
+		将fd添加到set中			
+	input : 
+		文件集合crs_fd_set_t *set
+		待添加的crs_tcp_socket_handler_t *fd
+	return value : 
+		success :	
+		fail : 	
+*/
+extern void crs_fd_set( crs_tcp_socket_handler_t *fd, crs_fd_set_t *set )
+{
+    if (NULL == fd)
+    {
+        return ;
+    }
+
+    if (NULL == set)
+    {
+        return ;
+    }
+
+    FD_SET( fd->fd, &( set->fds ) );
+}
+/*
+	function : 
+		将文件集合清空 			
+	input : 
+		crs_fd_set_t *set ： 文件集合
+	return value : 
+		success :	
+		fail : 	
+*/
+extern void crs_fd_zero( crs_fd_set_t *set )
+{
+    if (NULL == set)
+    {
+        return ;
+    }
+
+    FD_ZERO( &( set->fds ) );
+}
+/*
+	function : 
+		把一个本地协议地址赋予一个socket;
+		对于网际协议,协议地址是32位的ipv4或者128位的ipv6地址与16位的TCP或UDP端口号的组合.			
+	input : 
+		crs_tcp_socket_handler_t *sock : socket控制handle
+		char *ip ： 需要绑定的IP地址
+					如果ip == NULL ：绑定默认的IP地址
+		uint16_t port ： 需要绑定的端口
+	return value : 
+		success :	返回 0
+		fail : 	返回 -1
+*/
+extern int32_t crs_bind( crs_tcp_socket_handler_t *sock, char *ip, uint16_t port )
+{
+    struct sockaddr_in local_addr;
+    crs_memset( &local_addr, 0, sizeof( local_addr ) );
+    local_addr.sin_family = AF_INET;
+    local_addr.sin_addr.s_addr = crs_htonl ( INADDR_ANY );
+    local_addr.sin_port = crs_htons ( port );
+
+    if ( bind(sock->fd, (struct sockaddr *)&local_addr, sizeof(local_addr) ) < 0) {
+        return -1;
+    }
+    return 0;
+}
+/*
+ *
+ */
+typedef struct crs_sock_info
+{
+    int8_t local_ip[16];
+    int8_t peer_ip[16];
+    uint16_t local_port;
+    uint16_t peer_port;
+    uint32_t sock_type;
+};
+/*
+	function : 
+		获取socket的信息，即得倒crs_sock_info_t结构体内表示的信息
+	input : 
+		crs_tcp_socket_handler_t *sock ： scoket控制块
+		crs_sock_info_t *sock_info ： socket结构体指针，函数返回时传出socket的信息
+	return value : 
+		success :	0
+		fail : 	-1
+*/
+extern int32_t crs_getsock_info( crs_tcp_socket_handler_t *sock, crs_sock_info_t *sock_info )
+{
+    if( NULL == crs_memcpy( sock_info, &sock -> sock_info, sizeof( crs_sock_info_t ) ) )
+    {
+    	return -1;
+    }
+    return 0;
+}
+/*
+	function : 
+					
+	input : 
+	return value : 
+		success :	
+		fail : 	
+*/
+extern int8_t* crs_gethostbyname( const int8_t *name, int8_t *ip, const size_t ip_size )
+{
+   if (NULL == name) {
+       crs_dbg("crs gethostbyname invalid name\n");
+       return false;
+
+   }
+   if (NULL == ip) {
+       crs_dbg("crs gethostbyname invalid ip\n");
+       return false;
+
+   }
+   if (ip_size < 16) {
+       crs_dbg("crs gethostbyname ip_size[%zd](<16) is invalid\n", ip_size);
+       return false;
+
+   }
+
+   struct hostent *hptr = gethostbyname(name);
+   if (NULL == hptr) {
+       crs_dbg("crsgethostbyname for host %s failed: %s\n", name, strerror(errno));
+       return false;
+   }
+
+   char **pptr;
+   crs_dbg("crsgethostbyname %s official hostname: %s\n", name, hptr->h_name);
+   for(pptr = hptr->h_aliases; *pptr != NULL; pptr++) {
+       crs_dbg("crsgethostbyname %s alias: %s\n", name, *pptr);
+   }
+
+   switch(hptr->h_addrtype) {
+       case AF_INET:
+           // 选择最后一个IP  TODO 后期随机选择一个
+           pptr = hptr->h_addr_list;
+           for(; *pptr != NULL; pptr++) {
+               crs_memset(ip, 0, ip_size);
+               crs_strcpy(ip, inet_ntoa(*((struct in_addr *)*pptr)));
+               crs_dbg("crsgethostbyname %s ip: %s\n", name, ip);
+           }
+           break;
+       default:
+           crs_dbg("crsgethostbyname get %s ip failed Unkonwn address type\n", name);
+           return false;
+   }
+
+   return true;
+}
+/*
+	function :
+		将32位整形ip地址转换为点分十进制的字符串表示的IP地址
+	input :
+		unsigned int ipaddr,char * ipv4
+	return value :
+		success :
+		fail :
+*/
+static void crs_ip_ntoa( uint32_t ipaddr, int8_t *ipv4 )
+{
+	int32_t index;
+	int32_t temp;
+	int32_t i, k, f;
+	index = 3;
+	i = 0;
+        f = 0;
+	 for( index = 4; index > 0; index -- )
+	 {
+		 temp =   ( ( ipaddr >> ( ( index-1 )*8 ) ) & 0xFF );
+		 k = temp / 100;
+		 if( k != 0 )
+		 {
+		   ipv4[i++] = ( temp / 100 ) + '0';
+		 }
+		 else
+		 {
+			 f = 1;                                      //百位为0标志
+		 }
+		 k = temp / 10;
+		 if( k != 0 )
+		 {
+			ipv4[i++] = ( temp / 10 ) % 10 + '0';
+		 }
+		 else if( f == 0 )                               //百位不为零
+		 {
+			ipv4[i++] = ( temp / 10 ) % 10 +'0';
+		 }
+
+		 ipv4[i++] = ( temp % 10 ) + '0';
+		 ipv4[i++] = '.';
+	 }
+		 for( -- i; i < 16; i ++ )
+		 {
+			 ipv4[i] = 0;
+		 }
+}
+/*
+	function : 
+		将32位整形ip地址转换为点分十进制的字符串表示的IP地址
+	input : 
+		const uint32_t ip : 32w位整型的IP地址
+	return value : 
+		success :	点分十进制的ip地址
+		fail : 	返回NULL
+*/
+extern int8_t* crs_inet_ntoa(const uint32_t ip)
+{
+	uint32_t sock_addr = 0;
+    int8_t *str_ip = NULL;
+    sock_addr = crs_htonl( ip );
+
+    crs_ip_ntoa( crs_htonl( sock_addr ), str_ip );
+    return str_ip;
+}
+/*
+	function : 
+		将点分十进制的IP地址转换为32位的IP地址
+	input : 
+		const int8_t* ip ： 点分十进制表示的IP地址
+	return value : 
+		success :	返回转换后的32位IP地址
+		fail : 	返回 -1
+*/
+extern uint32_t crs_inet_aton(const int8_t* ip)
+{
+	struct sockaddr_in addr_inet;
+
+	if( 0 != inet_aton( ip, &add_inet.sin_addr ) )
+	{
+		return -1;
+	}
+	return addr_inet.sin_addr.s_addr;
+}
+/*
+	function : 
+		将本机字节序转换为32位的网络字节序的数
+	input : 
+		uint32_t hostlong ： 无符号的32位的本机字节序的数
+	return value : 
+		success :	返回网络字节序的数
+		fail : 	else
+*/
+extern uint32_t crs_htonl(uint32_t hostlong)
+{
+	return htonl(hostlong);
+}
+/*
+	function : 
+		将本机字节序转换为16位的网络字节序的数
+	input : 
+		无符号的16位的本机字节序的数
+	return value : 
+		success :	返回网络字节序
+		fail : 	else
+*/
+extern uint16_t crs_htons(uint16_t hostlong);
+/*
+	function : 
+		将32位的网络字节序转换为主机字节序
+	input : 
+		uint32_t netlong ：网络字节序
+	return value : 
+		success :	主机字节序
+		fail : 	else
+*/
+extern uint32_t crs_ntohl(uint32_t netlong);
+/*
+	function : 
+		将16位的网络字节序转为主机字节序
+	input : 
+		uint16_t netlong ： 网络字节序
+	return value : 
+		success :	主机字节序
+		fail : 	else
+*/
+extern uint16_t crs_ntohs(uint16_t netlong);
+
+//#define SOCK_STREAM 1
+//#define SOCK_DGRAM  0
+
+/*************************** tcp 接口 *********************************/
+
+/*
+ * 创建tcp socket
+ */
+ /*
+	function : 
+					
+	input : 
+	return value : 
+		success :	
+		fail : 	
+*/
+extern crs_tcp_socket_handler_t* crs_tcp_socket_create()
+{
+	crs_tcp_socket_handler_t *socket_handle = ( crs_tcp_socket_handler_t *)crs_malloc( sizeof() )
+}
+/*
+	function : 
+		监听函数，把一个未连接的socket转换成一个被动的socket，指示内核应接受指向该socket的连接请求		
+	input : 
+		crs_tcp_socket_handler_t *sock ： socket handle
+		uint32_t backlog ： 内核所维护的socket两个队列，已完成连接的队列和未完成连接的队列的和的最大值
+	return value : 
+		success :	返回 0 
+		fail : 	返回 -1
+*/
+extern int32_t crs_listen(crs_tcp_socket_handler_t *sock, uint32_t backlog);
+/*
+	function : 
+		由TCP服务器调用，用于从已完成连接的队列的头返回下一个已完成连接			
+	input : 
+		crs_tcp_socket_handler_t *sock ： socket handle
+	return value : 
+		success :	返回 所接收的socket
+		fail : 	返回 -1
+*/
+extern crs_tcp_socket_handler_t *crs_accept(crs_tcp_socket_handler_t *sock);
+
+/*
+ * socket连接到服务器(ip+port，ip是以'\0'结尾的字符串)，超时时间为timeout_usec微秒
+ * 返回值为0：表示连接成功
+ * 返回值为-1：表示连接失败
+ */
+ /*
+	function : 
+		socket连接到服务器		
+	input : 
+		crs_tcp_socket_handler_t *sock ： socket handle
+		int8_t *ip : 服务器的IP地址，点分十进制表示
+		uint16_t port ：服务器的端口号
+		uint32_t timeout_usec　：　０表示阻塞，非０表示超时时间
+	return value : 
+		success : 返回０
+		fail : 	返回 -1
+*/
+extern int32_t crs_tcp_connect(crs_tcp_socket_handler_t *sock, int8_t *ip, uint16_t port, uint32_t timeout_usec);
+
+ /*
+	function : 
+		从socket中接收数据到buf[0:n)中，超时时间为timeout_usec微秒			
+	input : 
+		crs_tcp_socket_handler_t *sock　：　socket handle
+		void *buf ： 存储所接收数据的buffer
+		uint32_t n ：指示第二个参数buf的长度
+	return value : 
+		success :	返回所接收到的字符的数量，0表示没接收到数据	
+		fail : 	返回-1，表示连接断开
+*/
+extern int32_t crs_tcp_recv(crs_tcp_socket_handler_t *sock, void *buf, uint32_t n);
+
+ /*
+	function : 
+		发送数据buf[0:n)			
+	input : 
+		crs_tcp_socket_handler_t *sock ： socket handle
+		void *buf ： 发送的字符串
+		uint32_t n ：指示第二个参数buf的长度
+	return value : 
+		success :	返回所发送的数据的长度
+		fail : 	返回-1，表示连接断开
+*/
+extern int32_t crs_tcp_send(crs_tcp_socket_handler_t *sock, void *buf, uint32_t n);
+
+ /*
+	function : 
+		销毁 tcp socket			
+	input : 
+		crs_tcp_socket_handler_t *sock ： socket handle
+	return value : 无
+		success :	
+		fail : 	
+*/
+extern void crs_tcp_socket_destroy(crs_tcp_socket_handler_t *sock);
+
+
+
+/*************************** udp 接口 *********************************/
+
+/*
+ * 创建udp socket，绑定端口到port，（为了加快近场搜索，建议设置socket支持发送广播包, 组播包）
+ * 注意port为本机字节序
+ */
+ /*
+	function : 
+		创建一个UDP socket			
+	input : 无
+	return value : 
+		success : 返回新创建的 udp socket	
+		fail : 	返回NULL
+*/
+extern crs_udp_socket_handler_t* crs_udp_socket_create();
+
+  /*
+	function : 
+		加入组播组			
+	input : 
+		crs_udp_socket_handler_t *sock ： socket handle
+		int8_t *ip : 组播的ip地址
+	return value : 
+		success :	返回 0
+		fail : 	返回 -1
+*/
+extern int32_t crs_udp_socket_join_multicast(crs_udp_socket_handler_t *sock, int8_t *ip);
+
+
+ /*
+	function : 
+		接收数据			
+	input : 
+		crs_udp_socket_handler_t *sock ：socket handle
+		int8_t *ip ： peer的ip
+		uint32_t ip_len ： 指示第二个参数ip的长度
+		uint16_t *port ： peer的端口
+		void *buf ：所接收到的来自peer的数据
+		uint32_t n ： 所接收到的来自peer的数据的长度
+
+	return value : 
+		success :	成功返回所接收到的数据的长度
+		fail : 	返回 -1
+*/
+extern int32_t crs_udp_recvfrom(crs_udp_socket_handler_t *sock, int8_t *ip, uint32_t ip_len, uint16_t *port, void *buf, uint32_t n);
+
+/*
+ * 向ip:port发送数据：buf[0,n)， 超时时间为timeout_usec微秒
+ * 注意port为本机字节序
+ *
+ * 返回值为-1：表示表示出错
+ * 返回值为0：表示在timeout_usec时间内没有写入数据
+ * 返回值为正数：表示发送的字节数
+ */
+ /*
+	function : 
+		发送数据			
+	input : 
+		crs_udp_socket_handler_t *sock ： socket handle
+		int8_t *ip ： peer的ip
+		uint16_t port ：peer的端口
+		void *buf ：发送给peer的数据
+		uint32_t n ： 指示第四个参数buf的长度
+	return value : 
+		success :	返回发送的数据的长度
+		fail : 	返回-1
+*/
+extern int32_t crs_udp_sendto(crs_udp_socket_handler_t *sock, int8_t *ip, uint16_t port, void *buf, uint32_t n);
+/*
+ * 销毁 udp socket
+ */
+ /*
+	function : 
+		销毁 udp socket			
+	input : 
+		crs_udp_socket_handler_t *sock : socket handle
+	return value :  无
+		success :	
+		fail : 	
+*/
+extern void crs_udp_socket_destroy(crs_udp_socket_handler_t *sock);

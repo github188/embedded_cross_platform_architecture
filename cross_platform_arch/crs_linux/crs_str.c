@@ -1,169 +1,135 @@
 /*
-	³£¼ûµÄ²Ù×÷×Ö·û´®²Ù×÷¹¦ÄÜ
-	linux platform
+	å¸¸è§çš„æ“ä½œå­—ç¬¦ä¸²æ“ä½œåŠŸèƒ½
 */
-#include "string.h"
-#include "stdio.h"
-#include "crs_str.h"
-#include <stdarg.h>
+
+#ifndef _CRS_MEM_H_
+#define _CRS_MEM_H_
+
+#include "crs_types.h"
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 /*
 	function : 
-			Çó×Ö·û´®³¤¶È		
-	args : 	
-			×Ö·û´®s
+					
+	args : 
 	return value : 
 		success :	
-			·µ»ØsµÄ³¤¶È,µ½ '\0'ÎªÖ¹
 		fail : 	
-			·µ»ØNULL
 */
-extern uint32_t crs_strlen(const char *s)
-{
-	return strlen( s );
-}
-
 /*
 	function : 
-		×Ö·û´®¸´ÖÆ£¬½«srcµÄ×Ö·û´®¸´ÖÆµ½destËùÖ¸ÏòµÄ×Ö·û´®ÖĞ			
-	args : 
-		char *dest : Ä¿µÄ×Ö·û´®£¬½«±»¸³ÖµµÄ×Ö·û´®
-		char *src £º Ô´×Ö·û´®
+			æ±‚å­—ç¬¦ä¸²é•¿åº¦
+	args : 	
+			å­—ç¬¦ä¸²s
 	return value : 
-		success : ·µ»ØdestµÄµØÖ·	
-		fail : 	·µ»ØNULL
+		success :	
+			è¿”å›sçš„é•¿åº¦,åˆ° '\0'ä¸ºæ­¢
+		fail : 	
+			è¿”å›NULL
 */
-extern char* strcpy(char* dest,const char* src)
-{
-	return strcpy(dest, src);
-}
+extern uint32_t crs_strlen(const int8_t *s);
 
 /*
 	function : 
-		×Ö·û´®¸´ÖÆ£¬½«srcµÄÇ°n×Ö½ÚµÄÄÚÈİ¸´ÖÆµ½destÖĞ			
+		å­—ç¬¦ä¸²å¤åˆ¶ï¼Œå°†srcçš„å­—ç¬¦ä¸²å¤åˆ¶åˆ°destæ‰€æŒ‡å‘çš„å­—ç¬¦ä¸²ä¸­
 	args : 
-		char *dest	: µÄ×Ö·û´®£¬½«±»¸³ÖµµÄ×Ö·û´®
-		char *src : Ô´×Ö·û´®
-		uint32_t n : ĞèÒª¸´ÖÆµÄ×Ö·û´®µÄ³¤¶È
+		int8_t *dest : ç›®çš„å­—ç¬¦ä¸²ï¼Œå°†è¢«èµ‹å€¼çš„å­—ç¬¦ä¸²
+		int8_t *src ï¼š æºå­—ç¬¦ä¸²
 	return value : 
-		success :	·µ»ØdestµÄµØÖ·
-		fail : 	·µ»ØNULL
+		success : è¿”å›destçš„åœ°å€
+		fail : 	è¿”å›NULL
 */
-extern char* strncpy(char* dest, const char* src, uint32_t n)
-{
-	return strcpy(dest, src, n);
-}
+extern int8_t* strcpy(int8_t* dest,const int8_t* src);
 
 /*
 	function : 
-		±È½Ï×Ö·û´®destºÍsrcµÄ´óĞ¡£¬¼´±È½ÏdestºÍsrcÖĞ×Ö·û´®¸÷¸ö×Ö½ÚµÄÖğÒ»±È½Ï
+		å­—ç¬¦ä¸²å¤åˆ¶ï¼Œå°†srcçš„å‰nå­—èŠ‚çš„å†…å®¹å¤åˆ¶åˆ°destä¸­
+	args : 
+		int8_t *dest	: çš„å­—ç¬¦ä¸²ï¼Œå°†è¢«èµ‹å€¼çš„å­—ç¬¦ä¸²
+		int8_t *src : æºå­—ç¬¦ä¸²
+		uint32_t n : éœ€è¦å¤åˆ¶çš„å­—ç¬¦ä¸²çš„é•¿åº¦
+	return value : 
+		success :	è¿”å›destçš„åœ°å€
+		fail : 	è¿”å›NULL
+*/
+extern int8_t* strncpy(int8_t* dest, const int8_t* src, uint32_t n);
+
+/*
+	function : 
+		æ¯”è¾ƒå­—ç¬¦ä¸²destå’Œsrcçš„å¤§å°ï¼Œå³æ¯”è¾ƒdestå’Œsrcä¸­å­—ç¬¦ä¸²å„ä¸ªå­—èŠ‚çš„é€ä¸€æ¯”è¾ƒ
 		
 	args : 
-		char* dest : ´ı±È½ÏµÄ×Ö·û´®µÄÖ¸Õë
+		int8_t* dest : å¾…æ¯”è¾ƒçš„å­—ç¬¦ä¸²çš„æŒ‡é’ˆ
 		
 	return value : 	
 		success :	
-			dest	>	src, ·µ»Ø1
-			dest	==	src, ·µ»Ø0
-			dest	<	src, ·µ»Ø-1
-		ÀıÈç¡°abc¡± < "abd",strcmp("abc", "abd")Ê±, ·µ»ØÖµÎª-1
-			¡°abc¡± == ""abc,strcmp("abc", "abc"), ·µ»ØÖµÎª0
-			¡°abd¡± > "adc", strcmp("abd", "abc"), ·µ»ØÖµÎª1
+			dest	>	src, è¿”å›1
+			dest	==	src, è¿”å›0
+			dest	<	src, è¿”å›-1
+		ä¾‹å¦‚â€œabcâ€ < "abd",strcmp("abc", "abd")æ—¶, è¿”å›å€¼ä¸º-1
+			â€œabcâ€ == ""abc,strcmp("abc", "abc"), è¿”å›å€¼ä¸º0
+			â€œabdâ€ > "adc", strcmp("abd", "abc"), è¿”å›å€¼ä¸º1
 		fail : 	NULL
 */
-extern int32_t strcmp(const char* dest,const char* src)
-{
-	return strcmp(dest, src);
-}
+extern int32_t strcmp(const int8_t* dest,const int8_t* src);
 /*
 	function : 
-		±È½Ï×Ö·û´®destºÍsrcµÄÇ°n¸ö×Ö½ÚµÄ´óĞ¡			
+		æ¯”è¾ƒå­—ç¬¦ä¸²destå’Œsrcçš„å‰nä¸ªå­—èŠ‚çš„å¤§å°
 	args : 
-		const char * dest £º´ı±È½ÏµÄ×Ö·û´®
-		const char * src £º ´ı±È½ÏµÄ×Ö·û´®
-		size_t n £º ĞèÒª±È½ÏµÄ×Ö·û´®µÄ³¤¶È
+		const int8_t * dest ï¼šå¾…æ¯”è¾ƒçš„å­—ç¬¦ä¸²
+		const int8_t * src ï¼š å¾…æ¯”è¾ƒçš„å­—ç¬¦ä¸²
+		size_t n ï¼š éœ€è¦æ¯”è¾ƒçš„å­—ç¬¦ä¸²çš„é•¿åº¦
 	return value : 		
 		success :
-			Ç°n¸ö×Ö½ÚÖĞ
-			dest	>	src, ·µ»Ø1
-			dest	==	src, ·µ»Ø0
-			dest	<	src, ·µ»Ø-1
-		fail : 	·µ»ØNULL
+			å‰nä¸ªå­—èŠ‚ä¸­
+			dest	>	src, è¿”å›1
+			dest	==	src, è¿”å›0
+			dest	<	src, è¿”å›-1
+		fail : 	è¿”å›NULL
 */
-extern int32_t strncmp ( const char * dest, const char * src, size_t n )
-{
-	return strncmp(dest, src, n);
-}
+extern int32_t strncmp ( const int8_t * dest, const int8_t * src, size_t n );
 
 /*
 	function : 
-			¸ñÊ½»¯´òÓ¡		
+			æ ¼å¼åŒ–æ‰“å°
 	args : 
-			¸ñÊ½»¯Êı¾İ
+			æ ¼å¼åŒ–æ•°æ®
 	return value : 
 		success :	
 		fail : 	
 */
-extern void  crs_printf(char *args,...)
-{
-	int iRet = 0;
-	char *pcBuff, *pcTemp;
-	int iSize = 256;
-
-	va_list list;
-	pcBuff = (char*)malloc(iSize);
-	if(pcBuff == NULL)
-	{
-		return ;
-	}
-	while(1)
-	{
-		va_start(list,pcFormat);
-		iRet = vsnprintf(pcBuff,iSize,pcFormat,list);
-		va_end(list);
-		if(iRet > -1 && iRet < iSize)
-		{
-			break;
-		}
-		else
-		{
-			iSize*=2;
-			if((pcTemp=realloc(pcBuff,iSize))==NULL)
-			{ 
-				iRet = -1;
-				break;
-			}
-			else
-			{
-				pcBuff=pcTemp;
-			}
-		  
-		}
-	}
-	printf(pcBuff);
-	free(pcBuff); 
-}                  
+extern void  crs_printf(int8_t *args,...) ; 
 /*
 	function : 
-		½«¿É±ä²ÎÊı¸ñÊ½»¯Êä³öµ½Ò»¸ö×Ö·ûÊı×é			
+		å°†å¯å˜å‚æ•°æ ¼å¼åŒ–è¾“å‡ºåˆ°ä¸€ä¸ªå­—ç¬¦æ•°ç»„
 	args : 
-		char *str [out],°ÑÉú³ÉµÄ¸ñÊ½»¯µÄ×Ö·û´®´æ·ÅÔÚÕâÀï.
-		size_t size [in], str¿É½ÓÊÜµÄ×î´ó×Ö·ûÊı[1]  (·Ç×Ö½ÚÊı£¬UNICODEÒ»¸ö×Ö·ûÁ½¸ö×Ö½Ú),·ÀÖ¹²úÉúÊı×éÔ½½ç.
-		const char *template [in], Ö¸¶¨Êä³ö¸ñÊ½µÄ×Ö·û´®£¬Ëü¾ö¶¨ÁËÄãĞèÒªÌá¹©µÄ¿É±ä²ÎÊıµÄÀàĞÍ¡¢¸öÊıºÍË³Ğò¡£
-		va_list ap [in], va_list±äÁ¿. va:variable-argument:¿É±ä²ÎÊı
+		int8_t *str [out],æŠŠç”Ÿæˆçš„æ ¼å¼åŒ–çš„å­—ç¬¦ä¸²å­˜æ”¾åœ¨è¿™é‡Œ.
+		size_t size [in], strå¯æ¥å—çš„æœ€å¤§å­—ç¬¦æ•°[1]  (éå­—èŠ‚æ•°ï¼ŒUNICODEä¸€ä¸ªå­—ç¬¦ä¸¤ä¸ªå­—èŠ‚),é˜²æ­¢äº§ç”Ÿæ•°ç»„è¶Šç•Œ.
+		const int8_t *template [in], æŒ‡å®šè¾“å‡ºæ ¼å¼çš„å­—ç¬¦ä¸²ï¼Œå®ƒå†³å®šäº†ä½ éœ€è¦æä¾›çš„å¯å˜å‚æ•°çš„ç±»å‹ã€ä¸ªæ•°å’Œé¡ºåºã€‚
+		va_list ap [in], va_listå˜é‡. va:variable-argument:å¯å˜å‚æ•°
 	return value : 
-		success :·µ»ØĞ´Èëµ½×Ö·ûÊı×éstrÖĞµÄ×Ö·û¸öÊı£¨²»°üº¬ÖÕÖ¹·û£©£¬×î´ó²»³¬¹ısize
-		fail : 	·µ»Ø¸ºÖµ
+		success :è¿”å›å†™å…¥åˆ°å­—ç¬¦æ•°ç»„strä¸­çš„å­—ç¬¦ä¸ªæ•°ï¼ˆä¸åŒ…å«ç»ˆæ­¢ç¬¦ï¼‰ï¼Œæœ€å¤§ä¸è¶…è¿‡size
+		fail : 	è¿”å›è´Ÿå€¼
 */
-extern int32_t crs_vsnprintf(char *s, uint32_t size, const char *template, va_list ap);
+extern int32_t crs_vsnprintf(int8_t *s, uint32_t size, const int8_t *template, va_list ap);
 /*
 	function : 
-		½«×Ö·û´®±íÊ¾µÄÊı×Ö×ª»»ÎªintĞÍµÄÊı×Ö		
+		å°†å­—ç¬¦ä¸²è¡¨ç¤ºçš„æ•°å­—è½¬æ¢ä¸ºintå‹çš„æ•°å­—
 	args : 	
-		const char *s £º ×Ö·û´®ĞÎÊ½µÄÊı×Ö£¬Èç¡°123¡±;	
+		const int8_t *s ï¼š å­—ç¬¦ä¸²å½¢å¼çš„æ•°å­—ï¼Œå¦‚â€œ123â€;
 	return value : 
-		success :	·µ»ØÊı×Ö±íÊ¾µÄÕûĞÎÊı
+		success :	è¿”å›æ•°å­—è¡¨ç¤ºçš„æ•´å½¢æ•°
 			
-		fail : 	·µ»Ø0
+		fail : 	è¿”å›0
 			
 */
-extern int32_t crs_atoi(const char *s);
+extern int32_t crs_atoi(const int8_t *s);
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+#endif

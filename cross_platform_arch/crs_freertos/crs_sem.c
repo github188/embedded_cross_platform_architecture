@@ -56,14 +56,14 @@ crs_sem_handler_t * crs_sem_create()
 
  /*
 	function : 
-		活得信号量
+		等待信号量
 	input : 
 		crs_sem_handler_t *sem : 信号量的handle
 	return value : 
 		success : 返回1
 		fail : 	返回0
 */
-int32_t crs_sem_take(crs_sem_handler_t *sem)
+int32_t crs_sem_wait(crs_sem_handler_t *sem)
 {
 	int32_t ret = xSemaphoreTake( sem->sem_cb, crs_wait_forever );
 	if( 0 == ret )
@@ -79,13 +79,13 @@ int32_t crs_sem_take(crs_sem_handler_t *sem)
 
  /*
 	function : 
-		释放信号量
+		触发信号量
 	input : 
 	return value : 
-		success : return 1
-		fail : 	return 0
+		success : return 0
+		fail : 	return -1
 */
-int32_t crs_sem_give(crs_sem_handler_t *sem)
+int32_t crs_sem_post(crs_sem_handler_t *sem)
 {
 	int ret = xSemaphoreGive( sem_sem_cb );
 	if(0 == ret)

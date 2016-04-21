@@ -369,13 +369,13 @@ extern bool crs_gethostbyname(const char *name, char *ip, const uint8_t  ip_size
 		success :
 		fail :
 */
-extern char* crs_inet_ntoa(const uint32_t ip, char *str_ip, uint32_t str_ip_size)
+extern int8_t* crs_inet_ntoa(const uint32_t ip)
 {
-    struct in_addr addr;
-    crs_memset(&addr, 0, sizeof(addr));
-    addr.s_addr = htonl(ip);
+	uint32_t sock_addr = 0;
+    int8_t *str_ip = NULL;
+    sock_addr = crs_htonl( ip );
 
-    ipU32toString(htonl(addr.s_addr),str_ip);
+    crs_ip_ntoa( crs_htonl( sock_addr ), str_ip );
     return str_ip;
 }
 

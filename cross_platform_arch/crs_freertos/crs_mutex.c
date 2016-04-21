@@ -1,5 +1,5 @@
 /*
-*mutex.h
+*mutex.c
 *mutex management
 *mutex锁的创建,使用和删除等操作
 */
@@ -15,7 +15,7 @@
 		success :	
 		fail : 	
 */
-typedef struct crs_mutex_handler_s crs_mutex_handler_t;
+typedef struct crs_mutex_handler crs_mutex_handler_t;
 
  /*
 	function : 
@@ -43,17 +43,17 @@ extern int32_t crs_mutex_lock(crs_mutex_handler_t *mutex)
 {
 	if(NULL == mutex)
 	{
-		return crs_failed;
+		return -1;
 	}
 	else
 	{
 		int ret = (int)xQueueTakeMutexRecursive((QueueHandle_t)mutex, portMAX_DELAY);
-		if(crs_failed == ret)
+		if(-1 == ret)
 		{
 			crs_dbg("mutex lock failed\r\n");
-			return crs_failed;
+			return -1;
 		}
-		return crs_success;
+		return 0;
 	}
 }
  /*
@@ -69,17 +69,17 @@ extern int32_t crs_mutex_unlock(crs_mutex_handler_t *mutex)
 {
 	if(NULL == mutex)
 	{
-		return crs_failed;
+		return -1;
 	}
 	else
 	{
 		int ret = (int)xQueueGiveMutexRecursive(mutex);
-		if(crs_failed == ret)
+		if(-1 == ret)
 		{
 			crs_dbg("crs_mutex mutex unlock failed\r\n");
-			return crs_failed;
+			return -1;
 		}
-		return crs_success;
+		return 0;
 	}
 }
  /*
@@ -87,15 +87,14 @@ extern int32_t crs_mutex_unlock(crs_mutex_handler_t *mutex)
 			销毁mutex并释放内存		
 	input : crs_mutex_handler_t *mutex -- mutex handler
 	return value : 
-		success :	返回1
-		fail : 	返回0
+		success :
+		fail :
 */
-extern int32_t crs_mutex_destroy(crs_mutex_handler_t *mutex)
+extern void crs_mutex_destroy(crs_mutex_handler_t *mutex)
 {
 	if(NULL == mutex)
 	{
-		return crs_failed;
+		return;
 	}
 	crs_free(mutex);
-	return crs_success;
 }

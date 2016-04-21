@@ -1,79 +1,101 @@
-/*
-*sem.h
+/*				linux
+*sem.c
 *semaphore management
 *信号量的创建,使用,删除等
 */
-/*
-	function : 
-					
-	input : 
-	return value : 
-		success :	
-		fail : 	
-*/
-#ifndef _CRS_SEM_H_
-#define _CRS_SEM_H_
 
-#ifdef __cplusplus
-extern "C"
+#include "crs_types.h"
+#include "crs_mem.h"
+#include "crs_dbg.h"
+
+#include <semaphore.h>
+#define crs_wait_forever 0xffffffffUL
+/*
+	function :
+		信号量的handle
+	input :
+	return value :
+		success :
+		fail :
+*/
+struct crs_sem_handler
 {
-#endif
+	struct semaphore sem_cb;
+};
 
 /*
-	function : 
-		信号量的handle			
-	input : 
-	return value : 
-		success :	
-		fail : 	
-*/
-typedef struct crs_sem_handler crs_sem_handler_t;
-
-/*
-	function : 
-		创建一个信号量			
-	input : 
+	function :
+		创建一个信号量
+	input :
 		无
-	return value : 
+	return value :
 		success :	返回所创建的信号量的内存空间
 		fail : 	返回NULL
 */
-crs_sem_handler_t * crs_sem_create();
-
- /*
-	function : 
-		等待信号量触发			
-	input : 
-		crs_sem_handler_t *sem : 信号量的handle
-	return value : 
-		success : 
-		fail : 	
-*/
-int32_t crs_sem_wait(crs_sem_handler_t *sem);
-
- /*
-	function : 
-		触发信号量	power on self test		
-	input : 
-	return value : 
-		success :	
-		fail : 	
-*/
-int32_t crs_sem_post(crs_sem_handler_t *sem);
-
- /*
-	function : 
-		销毁信号量			
-	input : 
-		crs_sem_handler_t *sem  
-	return value : 
-		success :	
-		fail : 	
-*/
-int32_t crs_sem_destroy(crs_sem_handler_t *sem);
-
-#ifdef __cplusplus
-extern "C"
+crs_sem_handler_t * crs_sem_create()
 {
-#endif
-#endif
+	crs_sem_handler_t *crs_sem_handler = (crs_sem_handler_t *)crs_malloc(sizeof(crs_sem_handler_t));
+	if (NULL == crs_sem_handler)
+	{
+		return NULL;
+	}
+	crs_memset( crs_sem_handler, 0, sizeof(crs_sem_handler_t));
+	sem_init( &(crs_sem_handler->sem_cb ), 1, 1);
+	return crs_sem_handler;
+}
+
+ /*
+	function :
+		等待信号量
+	input :
+		crs_sem_handler_t *sem : 信号量的handle
+	return value :
+		success : 获取信号另
+		fail :
+*/
+int32_t crs_sem_wait(crs_sem_handler_t *sem)
+{
+	return sem_wait( &( sem->sem_cb ) );
+}
+
+ /*
+	function :
+		触发信号量
+	input :
+		crs_sem_handler_t *sem : 信号量的控制块
+	return value :
+		success : 0
+		fail : -1
+*/
+int32_t crs_sem_post(crs_sem_handler_t *sem)
+{
+	return sem_post( &( sem -> sem_cb ) );
+}
+
+ /*
+	function :
+		销毁信号量
+	input :
+		crs_sem_handler_t *sem : 信号量的控制块
+	return value :
+		success : 0
+		fail : -1
+*/
+int32_t crs_sem_destroy(crs_sem_handler_t *sem)
+{
+	int32_t retval = sem_destroy( &( sem -> sem_cb ) );
+	if( -1 == retval )
+	{
+		crs_dbg( "sem_destroy failed\e\n" );
+		crs_free( sem );
+		sem = NULL;
+		return -1;
+	}
+	else
+	{
+		crs_free( sem );
+		sem = NULL;
+		return 0;
+	}
+}
+

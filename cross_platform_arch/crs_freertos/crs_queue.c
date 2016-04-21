@@ -3,6 +3,11 @@
 *queue management
 *队列的创建,使用和删除等
 */
+#include "crs_types.h"
+#include "crs_mem.h"
+#include "crs_debug.h"
+#include "crs_queue.h"
+
 #include "queue.h"
 /*
 	function : 
@@ -42,7 +47,7 @@ crs_queue_cb_t *crs_create_queue(int8_t queue_size, int16_t element_size, uint8_
 	queue = (crs_queue_cb_t *) crs_malloc( sizeof (crs_queue_cb_t) );
 	if(queue_size <= 0 || element_size <= 0)
 	{
-		crs_dbg("crs_create_queue queue_size of element size error,please check!\r\n");
+		crs_dbg("crs_create_queue queue_size of element size error!\r\n");
 		*err_code = QUEUE_CREATE_FAIL;
 		return NULL;
 	}
@@ -57,12 +62,12 @@ crs_queue_cb_t *crs_create_queue(int8_t queue_size, int16_t element_size, uint8_
 	if ( queue == NULL) 
 	{
 		*err_code = QUEUE_CREATE_FAIL;
-		crs_memfree(queue);
+		crs_free(queue);
 		return NULL;
 	} 
 	else 
 	{
-		*err_code = QUEUE_SUCCESS;
+		*err_code = QUEUE_CREATE_SUCCESS;
 		return (crs_queue_cb_t)queue;
 	}
 }
@@ -84,12 +89,12 @@ void crs_queue_write(crs_queue_cb_t* cb, void* message, int32_t timeout_ms, uint
 	{	//equivalent to xQueueSendToBack()
 		if (crs_failed == xQueueSend(&(cb->queue_cb), message, CRS_WAIT_FOREVER)) 
 		{
-			*err_code = QUEUE_WRITE_FALI;
+			*err_code = QUEUE_WRITE_FAIL;
 			return ;
 		} 
 		else 
 		{
-			*err_code = QUEUE_SUCCESS;
+			*err_code = QUEUE_WRITE_FAIL;
 			crs_dbg("crs_write_queue write suceess\n");
             return;
 		}
@@ -98,7 +103,7 @@ void crs_queue_write(crs_queue_cb_t* cb, void* message, int32_t timeout_ms, uint
 	{
 		if (crs_failed == xQueueSend(&(cb->queue_cb), message, timeout_ms)) 
 		{
-			*err_code=QUEUE_WRITE_FALI;
+			*err_code=QUEUE_WRITE_FAIL;
 			return ;
 		} 
 		else 
@@ -127,7 +132,7 @@ void crs_read_queue(crs_queue_cb_t* cb, void *data, int32_t timeout_ms, uint8_t 
 	{
 		if (crs_failed == xQueueReceive(&(cb->queue_cb), data, CRS_WAIT_FOREVER)) 
 		{
-			*err_code=QUEUE_WRITE_FALI;
+			*err_code = QUEUE_WRITE_FAIL;
 			return;
 		} 
 		else 
@@ -141,7 +146,7 @@ void crs_read_queue(crs_queue_cb_t* cb, void *data, int32_t timeout_ms, uint8_t 
 	{
 		if (crs_failed == xQueueReceive(&(cb->queue_cb), data, timeout_ms)) 
 		{
-			*err_code=QUEUE_WRITE_FALI;
+			*err_code=QUEUE_WRITE_FAIL;
 			return;
 		} 
 		else 
@@ -162,10 +167,10 @@ void crs_read_queue(crs_queue_cb_t* cb, void *data, int32_t timeout_ms, uint8_t 
 		success :	
 		fail : 	
 */
-void crs_destroy_queue(crs_queue_cb_t* cb, uint8_t *err_code)
+int32_t crs_destroy_queue(crs_queue_cb_t* cb, uint8_t *err_code)
 {
 	vQueueDelete( (QueueHandle_t)(&(cb->queue_cb)) );
-	crs_memfree(cb);
+	crs_free(cb);
 	*err_code = QUEUE_SUCCESS;
 }
 

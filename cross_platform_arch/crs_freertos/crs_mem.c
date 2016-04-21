@@ -4,10 +4,13 @@
 *	
 	内存的创建,删除
 */
-#include "stdlib.h"
-#include <stdarg.h>
+
 #include "crs_mem.h"
 #include "crs_types.h"
+
+#include "stdlib.h"
+#include <stdarg.h>
+
 /*
 	function : 
 					
@@ -53,7 +56,7 @@ extern void *crs_calloc(size_t nmemb, size_t size)
 	success :	释放内存空间
 	fail : 	未能释放
 */
-extern void crs_memfree(void *ptr)
+extern void crs_free(void *ptr)
 {
     vPortFree(ptr);
 }

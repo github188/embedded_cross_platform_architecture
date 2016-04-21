@@ -1,11 +1,18 @@
 /*
+*			linux
 *crs_mem.c
 *	memory management
-*	linux platform
+*	
 	内存的创建,删除
+	首先创建一个heap，然后在heap进行动态的分配和回收内存。
 */
-#include "string.h"
-#include "stdlib.h"
+
+#include "crs_types.h"
+#include "crs_str.h"
+
+#include <stdlib.h>
+#include <string.h>
+
 /*
 	function : 
 		内存分配函数
@@ -16,7 +23,7 @@
 */
 extern void *crs_malloc(size_t size)
 {
-	return malloc(size);
+	return malloc( size );
 }
 
 /*
@@ -29,11 +36,10 @@ extern void *crs_malloc(size_t size)
 		success-返回所分配内存的地址
 		fail-返回NULL
 */
-extern void *crs_calloc(size_t nmemb, size_t size)
+extern void *crs_calloc( size_t nmemb, size_t size )
 {
-	return calloc(nmemb, size);
+	return calloc( nmemb, size );
 }
-
 /*
 	function : 
 		内存释放
@@ -44,9 +50,13 @@ extern void *crs_calloc(size_t nmemb, size_t size)
 		success :	
 		fail : 	
 */
-extern void crs_free(void *ptr)
+extern void crs_free(void *p)
 {
-	free( ptr );
+	 if ( p == NULL )
+	 {
+	     return;
+	 }
+	free( p );
 }
 
 /*
@@ -86,13 +96,13 @@ extern uint8_t crs_memcmp(void *dest, void *src, size_t n)
 			将s所指向内存的前n个字节内容赋值为c
 	input : 
 			void *s : 制定内存的地址
-			int c : 所赋值的值
+			int32_t c : 所赋值的值
 			size_t n : 字节数
 	return value : 
-		success :	返回s的地址
+		success :	返回指向s的指针
 		fail : 	NULL
 */
-extern void *crs_memset(void *s, int c, size_t n)
+extern void *crs_memset(void *s, int32_t c, size_t n)
 {
 	return memset(s, c, n);
 }

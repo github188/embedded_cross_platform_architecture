@@ -4,6 +4,7 @@
 *队列的创建,使用和删除等
 */
 #include "crs_types.h"
+#include "crs_queue.h"
 /*
 	function : 
 					
@@ -57,7 +58,7 @@ crs_queue_cb_t *crs_create_queue(int8_t queue_size, int16_t element_size, uint8_
 	if ( queue == NULL) 
 	{
 		*err_code = QUEUE_CREATE_FAIL;
-		crs_memfree(queue);
+		crs_free(queue);
 		return NULL;
 	} 
 	else 
@@ -165,7 +166,7 @@ void crs_read_queue(crs_queue_cb_t* cb, void *data, int32_t timeout_ms, uint8_t 
 void crs_destroy_queue(crs_queue_cb_t* cb, uint8_t *err_code)
 {
 	vQueueDelete( (QueueHandle_t)(&(cb->queue_cb)) );
-	crs_memfree(cb);
+	crs_free(cb);
 	*err_code = QUEUE_SUCCESS;
 }
 

@@ -1,16 +1,7 @@
-/*
-	常见的操作字符串操作功能
+/*				linux
+ * crs_str.c
+ *常见的操作字符串操作功能
 */
-
-#ifndef _CRS_MEM_H_
-#define _CRS_MEM_H_
-
-#include "crs_types.h"
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 /*
 	function : 
 					
@@ -19,6 +10,14 @@ extern "C"
 		success :	
 		fail : 	
 */
+#include "crs_types.h"
+#include "crs_str.h"
+
+#include <string.h>
+#include <time.h>
+#include <stdarg.h>
+#include <stdlib.h>
+
 /*
 	function : 
 			求字符串长度
@@ -30,7 +29,10 @@ extern "C"
 		fail : 	
 			返回NULL
 */
-extern uint32_t crs_strlen(const int8_t *s);
+extern uint32_t crs_strlen(const int8_t *s)
+{
+	return strlen( s );
+}
 
 /*
 	function : 
@@ -42,7 +44,10 @@ extern uint32_t crs_strlen(const int8_t *s);
 		success : 返回dest的地址
 		fail : 	返回NULL
 */
-extern int8_t* strcpy(int8_t* dest,const int8_t* src);
+extern int8_t* crs_strcpy(int8_t* dest,const int8_t* src)
+{
+	return strcpy( dest, src );
+}
 
 /*
 	function : 
@@ -55,7 +60,10 @@ extern int8_t* strcpy(int8_t* dest,const int8_t* src);
 		success :	返回dest的地址
 		fail : 	返回NULL
 */
-extern int8_t* strncpy(int8_t* dest, const int8_t* src, uint32_t n);
+extern int8_t* crs_strncpy(int8_t* dest, const int8_t* src, uint32_t n)
+{
+	return strncpy ( dest, src, n );
+}
 
 /*
 	function : 
@@ -74,7 +82,10 @@ extern int8_t* strncpy(int8_t* dest, const int8_t* src, uint32_t n);
 			“abd” > "adc", strcmp("abd", "abc"), 返回值为1
 		fail : 	NULL
 */
-extern int32_t strcmp(const int8_t* dest,const int8_t* src);
+extern int32_t crs_strcmp(const int8_t* dest,const int8_t* src)
+{
+	return crs_strcmp( dest, src );
+}
 /*
 	function : 
 		比较字符串dest和src的前n个字节的大小
@@ -90,7 +101,10 @@ extern int32_t strcmp(const int8_t* dest,const int8_t* src);
 			dest	<	src, 返回-1
 		fail : 	返回NULL
 */
-extern int32_t strncmp ( const int8_t * dest, const int8_t * src, size_t n );
+extern int32_t crs_strncmp ( const int8_t * dest, const int8_t * src, size_t n )
+{
+	return strncmp ( dest, src, n);
+}
 
 /*
 	function : 
@@ -101,7 +115,21 @@ extern int32_t strncmp ( const int8_t * dest, const int8_t * src, size_t n );
 		success :	
 		fail : 	
 */
-extern void  crs_printf(int8_t *args,...) ; 
+extern int32_t  crs_printf(int8_t *tmplate,...)
+{
+	va_list args;
+	va_start( args, tmplate );
+	time_t currtime;
+	time( &currtime );
+	char date[64] = { 0 };
+	ctime_r( &currtime, date ); // should never failed
+	date[ strlen( date ) - 1 ] = '\0';
+	printf( "%s ", date );
+    printf( " : " );
+	vprintf( tmplate, args );
+	va_end( args );
+	return 0;
+}
 /*
 	function : 
 		将可变参数格式化输出到一个字符数组
@@ -114,7 +142,10 @@ extern void  crs_printf(int8_t *args,...) ;
 		success :返回写入到字符数组str中的字符个数（不包含终止符），最大不超过size
 		fail : 	返回负值
 */
-extern int32_t crs_vsnprintf(int8_t *s, uint32_t size, const int8_t *template, va_list ap);
+extern int32_t crs_vsnprintf(int8_t *s, uint32_t size, const int8_t *template, va_list ap)
+{
+	return vsnprintf( s, size, template, ap);
+}
 /*
 	function : 
 		将字符串表示的数字转换为int型的数字
@@ -127,9 +158,6 @@ extern int32_t crs_vsnprintf(int8_t *s, uint32_t size, const int8_t *template, v
 			
 */
 extern int32_t crs_atoi(const int8_t *s);
-
-#ifdef __cplusplus
-extern "C"
 {
-#endif
-#endif
+	return atoi( s );
+}

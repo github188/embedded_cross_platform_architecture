@@ -8,7 +8,7 @@
 */
 
 #include "crs_types.h"
-#include "crs_str.h"
+#include "crs_mem.h"
 
 #include <stdlib.h>
 #include <string.h>

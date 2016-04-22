@@ -1,9 +1,7 @@
-/*
+/*				linux
 *file management
 *文件操作
 */
-#ifndef _CRS_IOOPS_H_
-#define _CRS_IOOPS_H_
 
 #include "crs_types.h"
 #define STR_LEN 60
@@ -17,12 +15,6 @@
 #define SEEK_SET 0	
 #define SEEK_CUR 1
 #define SEEK_END 2
-
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 
 /*
@@ -162,10 +154,3 @@ extern int32_t crs_file_seek(crs_file_handler_t *file, int32_t pos, int32_t when
 */
 extern int32_t crs_file_close(crs_file_handler_t *file);
 
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-#endif

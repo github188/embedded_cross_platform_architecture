@@ -14,6 +14,7 @@
 #include <sys/select.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <errno.h>
 /*
  * TCP socket，这里read与write函数，发者可以实现为阻塞或非阻塞模式，SDK并不关心
  * 内部维系了read与write，不关心具体实现是否阻塞
@@ -40,7 +41,9 @@ typedef crs_socket_handler_t crs_udp_socket_handler_t;
 		success :	
 		fail : 	
 */
-typedef struct crs_fd_set  crs_fd_set_t;
+struct crs_fd_set {
+    fd_set fds;
+};
 
 /*
 	function : 
@@ -452,17 +455,34 @@ extern uint16_t crs_ntohs(uint16_t netlong)
  */
  /*
 	function : 
-					
-	input : 
+		创建TCPsocket
+	input : 无
 	return value : 
-		success :	
+		success :	返回socket控制块
 		fail : 	
 */
 extern crs_tcp_socket_handler_t* crs_tcp_socket_create()
 {
-	crs_tcp_socket_handler_t *socket_handle = ( crs_tcp_socket_handler_t *)crs_malloc( sizeof(crs_tcp_socket_handler_t) );
-	return socket_handle;
+    crs_socket_handler_t *sock = ( crs_socket_handler_t * ) crs_malloc( sizeof ( crs_socket_handler_t ) );
+    if ( NULL == sock )
+    {
+        return NULL;
+    }
+
+    int32_t fd = -1;
+
+    fd = socket( AF_INET, SOCK_STREAM, 0 );
+    if ( 0 > fd )
+    {
+        crs_close(fd);
+        crs_free ( sock );
+        return NULL;
+    }
+    sock->fd = fd;
+    sock->sock_type = SOCK_STREAM;
+    return sock;
 }
+
 /*
 	function : 
 		监听函数，把一个未连接的socket转换成一个被动的socket，指示内核应接受指向该socket的连接请求		
@@ -541,15 +561,16 @@ extern int32_t crs_tcp_connect(crs_tcp_socket_handler_t *sock, int8_t *ip, uint1
 	int val, timeout_ms;
 	val = 0;
 	timeout_ms = timeout_usec / 1000;
-    mem_set( &peer_addr, 0, sizeof( peer_addr ) );
+    crs_memset( &peer_addr, 0, sizeof( peer_addr ) );
     peer_addr.sin_family = AF_INET;
     peer_addr.sin_addr.s_addr = crs_inet_addr( ip );
     peer_addr.sin_port = htons( port );
 
+
     while ( 1 )
     {
         val = connect( fd, ( struct sockaddr *)&peer_addr, sizeof( peer_addr ) );
-		if( ( EALREADY == val ) || ( SL_POOL_IS_EMPTY == val ) )
+		if( ( EALREADY == val ) || ( POOL_IS_EMPTY == val ) )
 		{
 			if(timeout_ms > 0)
 			{
@@ -564,7 +585,7 @@ extern int32_t crs_tcp_connect(crs_tcp_socket_handler_t *sock, int8_t *ip, uint1
 		}
 		else if( val < 0 )
 		{
-			return (-1);
+			return ( -1 );
 		}
 		else
 		{
@@ -581,12 +602,70 @@ extern int32_t crs_tcp_connect(crs_tcp_socket_handler_t *sock, int8_t *ip, uint1
 		crs_tcp_socket_handler_t *sock　：　socket handle
 		void *buf ： 存储所接收数据的buffer
 		uint32_t n ：指示第二个参数buf的长度
+		uint32_t timeout_usec : 非0表示超时时间，0表示阻塞
 	return value : 
 		success :	返回所接收到的字符的数量，0表示没接收到数据	
 		fail : 	返回-1，表示连接断开
 */
-extern int32_t crs_tcp_recv(crs_tcp_socket_handler_t *sock, void *buf, uint32_t n);
+extern int32_t crs_tcp_recv(crs_tcp_socket_handler_t *sock, void *buf, uint32_t n, uint32_t timeout_usec)
+{
+    int32_t fd = sock->fd;
+    int32_t ret;
+    uint32_t len = n;
+    uint8_t * recv_buf;
+    recv_buf = buf;
 
+    if (0 == timeout_usec) {
+        return recv(fd, recv_buf, len, SO_NONBLOCKING);
+    }
+
+    uint32_t timeout_left = timeout_usec;
+    struct timeval delay;
+    while(len > 0) {
+        crs_memset(&delay, 0, sizeof(struct timeval));
+        delay.tv_sec = timeout_left / 1000000;
+        delay.tv_usec = timeout_left % 1000000;
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(fd, &fds);
+        ret = select(fd + 1, &fds, NULL, NULL, &delay);
+        if(ret < 0)
+        {
+            return -1;
+        }
+        else if(ret == 0)
+        {
+			return 0;
+        }
+        else
+        {
+            if( CRS_FD_ISSET( fd, &fds ) )
+            {
+                timeout_left = delay.tv_sec * 1000000 + delay.tv_usec;
+                ret = recv( fd, recv_buf, len, 0 );
+                if( ret == EAGAIN )
+                {
+					crs_sleep(40);
+					continue;
+                }
+                else if(ret < 0)
+                {
+					return -1;
+                }
+                else
+                {
+					return ret;
+                }
+
+            }
+            else
+            {
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
  /*
 	function : 
 		发送数据buf[0:n)			
@@ -598,18 +677,82 @@ extern int32_t crs_tcp_recv(crs_tcp_socket_handler_t *sock, void *buf, uint32_t 
 		success :	返回所发送的数据的长度
 		fail : 	返回-1，表示连接断开
 */
-extern int32_t crs_tcp_send(crs_tcp_socket_handler_t *sock, void *buf, uint32_t n);
+extern int32_t crs_tcp_send(crs_tcp_socket_handler_t *sock, void *buf, uint32_t n, uint32_t timeout_usec)
+{
+    uint32_t send_len ;
+    uint8_t *send_buf;
+    uint32_t ___timeout;
+    int32_t fd ;
+    int32_t ret=0;
 
+	send_len = n;
+	send_buf = buf;
+	___timeout = timeout_usec;
+	fd = sock->fd;
+    //TODO 如果timeout_usec 为0 则直接进行发送一次
+    if (0 == timeout_usec)
+    {
+		ret = send(fd, send_buf, send_len, 0);
+		return ret;
+    }
+    while (0 != send_len)
+    {
+        //判断是否可写
+        fd_set wset;
+        struct timeval timeout;
+        FD_ZERO(&wset);
+        FD_SET(fd, &wset);
+        timeout.tv_sec = (___timeout) / 1000000;
+        timeout.tv_usec = (___timeout) % 1000000;
+        ret = select ( fd+1, NULL, &wset, NULL, &timeout );
+        if (0 > ret)
+        {
+            return -1;
+        }
+        else if(0 == ret)
+        {
+			return 0;
+		}
+        else
+        {
+            if ( FD_ISSET( fd, &wset ) )
+            {
+                ___timeout = timeout.tv_sec*1000000 + timeout.tv_usec;
+            }
+            else
+            {
+                return -1; //sock 错误？
+            }
+            ret = send( fd, send_buf, send_len, 0 );
+            if ( EAGAIN == ret )
+            {
+               crs_sleep(40);
+			   continue;
+            }
+            else if( ret < 0 )
+            {
+				return (-1);
+            }
+			return ret;
+        }
+    }
+    return 0;
+}
  /*
 	function : 
 		销毁 tcp socket			
 	input : 
 		crs_tcp_socket_handler_t *sock ： socket handle
 	return value : 无
-		success :	
+		success : 0
 		fail : 	
 */
-extern void crs_tcp_socket_destroy(crs_tcp_socket_handler_t *sock);
+extern uint32_t crs_tcp_socket_destroy(crs_tcp_socket_handler_t *sock)
+{
+    crs_close(sock->fd);
+    crs_free(sock);
+    return 0;
+}
 
 
 
@@ -627,7 +770,28 @@ extern void crs_tcp_socket_destroy(crs_tcp_socket_handler_t *sock);
 		success : 返回新创建的 udp socket	
 		fail : 	返回NULL
 */
-extern crs_udp_socket_handler_t* crs_udp_socket_create();
+extern crs_udp_socket_handler_t* crs_udp_socket_create()
+{
+    crs_socket_handler_t *sock = (crs_socket_handler_t *) crs_malloc( sizeof ( crs_socket_handler_t ) );
+    if (NULL == sock)
+    {
+        return NULL;
+    }
+
+    int32_t fd = -1;
+
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (0 > fd)
+    {
+        close(fd);
+        crs_free(sock);
+        return NULL;
+    }
+    sock->fd = fd;
+    sock->sock_type = SOCK_DGRAM;
+
+    return sock;
+}
 
   /*
 	function : 
@@ -639,7 +803,21 @@ extern crs_udp_socket_handler_t* crs_udp_socket_create();
 		success :	返回 0
 		fail : 	返回 -1
 */
-extern int32_t crs_udp_socket_join_multicast(crs_udp_socket_handler_t *sock, int8_t *ip);
+extern int32_t crs_udp_socket_join_multicast(crs_udp_socket_handler_t *sock, int8_t *ip)
+{
+    int32_t fd = sock->fd;
+
+	SlSockIpMreq mreq;
+	crs_memset((void *)&mreq,0,sizeof(mreq));
+	mreq.imr_multiaddr.s_addr = crs_inet_addr(ip);
+	mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+	if(sl_SetSockOpt(fd, SL_IPPROTO_IP, SL_IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq))<0){
+			return -1;
+	};
+
+	return 0;
+}
+
 
 
  /*
@@ -657,7 +835,62 @@ extern int32_t crs_udp_socket_join_multicast(crs_udp_socket_handler_t *sock, int
 		success :	成功返回所接收到的数据的长度
 		fail : 	返回 -1
 */
-extern int32_t crs_udp_recvfrom(crs_udp_socket_handler_t *sock, int8_t *ip, uint32_t ip_len, uint16_t *port, void *buf, uint32_t n);
+extern int32_t crs_udp_recvfrom(crs_udp_socket_handler_t *sock, int8_t *ip, uint32_t ip_len, uint16_t *port, void *buf, uint32_t n, uint32_t timeout_usec)
+{
+    struct sockaddr_in peer_addr;
+    uint16_t peeraddr_len = sizeof( peer_addr );
+    int32_t __fd = sock -> fd;
+
+    if (0 == timeout_usec)
+    {
+        int32_t ret = recvfrom( __fd, buf, n, 0, ( struct sockaddr* )&peer_addr, &peeraddr_len );
+        if (ret > 0)
+        {
+            *port = ntohs( peer_addr.sin_port );
+            my_inet_ntop( AF_INET, &(peer_addr.sin_addr), ip, ip_len - 1 );
+        }
+        return ret;
+    }
+
+    struct timeval __timeout;
+    crs_memset( &__timeout, 0, sizeof( struct timeval ) );
+    __timeout.tv_sec = timeout_usec / 1000000;
+    __timeout.tv_usec = timeout_usec % 1000000;
+    fd_set rwet;
+    FD_ZERO( &rwet );
+    FD_SET( __fd, &rwet );
+    int32_t __ret = select( __fd + 1, &rwet, NULL, NULL, &__timeout );
+    if(__ret < 0)
+    {
+        return -1;
+    }
+    else if(0 == __ret)
+    {
+		return 0;
+	}
+    else
+	{
+        if( FD_ISSET( __fd, &rwet ) )
+        {
+            __ret = recvfrom( __fd, buf, n, 0, ( struct sockaddr* ) &peer_addr, &peeraddr_len );
+            if (__ret > 0)
+            {
+                *port = ntohs(peer_addr.sin_port);
+                my_inet_ntop( AF_INET, &(peer_addr.sin_addr), ip, ip_len - 1);
+            }
+            else if( SL_EAGAIN == __ret )
+            {
+				return 0;
+            }
+            return __ret;
+        }
+        else
+        {
+            return -1;
+        }
+    }
+}
+
 
 /*
  * 向ip:port发送数据：buf[0,n)， 超时时间为timeout_usec微秒
@@ -680,7 +913,67 @@ extern int32_t crs_udp_recvfrom(crs_udp_socket_handler_t *sock, int8_t *ip, uint
 		success :	返回发送的数据的长度
 		fail : 	返回-1
 */
-extern int32_t crs_udp_sendto(crs_udp_socket_handler_t *sock, int8_t *ip, uint16_t port, void *buf, uint32_t n);
+extern int32_t crs_udp_sendto(crs_udp_socket_handler_t *sock, int8_t *ip, uint16_t port, void *buf, uint32_t n, uint32_t timeout_usec)
+{
+	uint32_t send_len = n;
+	uint8_t *send_buf = buf;
+
+	uint32_t ___timeout = timeout_usec;
+	int32_t fd = sock->fd;
+
+	struct sockaddr_in peer_addr;
+	crs_memset( &peer_addr, 0, sizeof( peer_addr ) );
+	peer_addr.sin_family = AF_INET;
+	peer_addr.sin_addr.s_addr = crs_inet_addr( ip );
+	peer_addr.sin_port = htons( port );
+
+	if (0 == timeout_usec)
+	{
+		return sendto( fd, send_buf, send_len, 0, (struct sockaddr*)&peer_addr, sizeof( peer_addr ) );
+	}
+	while (0 != send_len)
+	{
+		//判断是否可写
+		fd_set wset;
+		struct timeval timeout;
+		FD_ZERO( &wset );
+		FD_SET(fd, &wset);
+		timeout.tv_sec = (___timeout) / 1000000;
+		timeout.tv_usec = (___timeout) % 1000000;
+		int32_t ret = select( fd+1, NULL, &wset, NULL, &timeout );
+		if (0 > ret)
+		{
+			return -1;
+		}
+		else if(0 == ret)
+		{
+			return 0;
+		}
+		else
+		{
+			if (FD_ISSET(fd, &wset))
+			{
+				___timeout = timeout.tv_sec*1000000 + timeout.tv_usec;
+			}
+			else
+			{
+				return -1; //sock 错误
+			}
+			ret = sendto( fd, send_buf, send_len, 0, ( struct sockaddr* ) &peer_addr, sizeof( peer_addr ) );
+			if ( EAGAIN == ret )
+			{
+				crs_sleep(20);
+				continue;
+			}
+			else if( ret < 0 )
+			{
+				return -1;
+			}
+			return ret;
+		}
+	}
+	return 0;
+}
 /*
  * 销毁 udp socket
  */
@@ -693,4 +986,9 @@ extern int32_t crs_udp_sendto(crs_udp_socket_handler_t *sock, int8_t *ip, uint16
 		success :	
 		fail : 	
 */
-extern void crs_udp_socket_destroy(crs_udp_socket_handler_t *sock);
+extern int32_t crs_udp_socket_destroy( crs_udp_socket_handler_t *sock )
+{
+    crs_close(sock->fd);
+    crs_free(sock);
+    return 0;
+}

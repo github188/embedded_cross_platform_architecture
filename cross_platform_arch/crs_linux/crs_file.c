@@ -60,7 +60,6 @@ typedef struct
 	uint64_t file_write_start;		//能写文件的开始
 	uint64_t file_write_pos;		//当前写文件的位置
 	uint64_t file_write_end;		//能写的文件的末尾
-	
 } file_info_t;
 
 /************************ file 接口 *********************************/
@@ -92,7 +91,15 @@ typedef struct
 		success :	返回文件的控制handle
 		fail : 	返回NULL
 */
-extern crs_file_handler_t* crs_file_open(crs_file_handler_t *file, file_mode_e mode);
+extern crs_file_handler_t* crs_file_open(crs_file_handler_t *file, file_mode_e mode)
+{
+	switch (mode)
+	{
+	case fmode_r : fopen()
+	case fmode_w:
+	case fmode_a:
+	}
+}
 
   /*
 	function :

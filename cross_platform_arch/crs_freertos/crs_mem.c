@@ -1,4 +1,4 @@
-/*
+/*			FreeRTOS
 *crs_mem.c
 *	memory management
 *	
@@ -10,15 +10,8 @@
 
 #include "stdlib.h"
 #include <stdarg.h>
-
-/*
-	function : 
-					
-	input : 
-	return value : 
-		success :	
-		fail : 	
-*/
+#include "portable.h"
+#include <string.h>
 /*
 	function : 内存分配函数
 	input : size_t size
@@ -26,9 +19,9 @@
 	fail-返回NLL
 */
 
-extern void *crs_malloc(size_t size)
+extern void *crs_malloc( size_t size )
 {	
-    return  pvPortMalloc(size);
+    return  pvPortMalloc( size );
 }
 /*
 	function : 内存分配函数
@@ -38,14 +31,15 @@ extern void *crs_malloc(size_t size)
 	success-返回所分配内存的地址
 	fail-返回NULL
 */
-extern void *crs_calloc(size_t nmemb, size_t size)
+extern void *crs_calloc( size_t nmemb, size_t size )
 {
-    char * _pt = pvPortMalloc(nmemb * size);
-    if(_pt == NULL){
+    char * p = pvPortMalloc(nmemb * size);
+    if(p == NULL)
+    {
 		return NULL;
     }
-    memset(_pt,0,nmemb * size);
-    return _pt;        
+    crs_memset( p, 0, nmemb * size);
+    return p;
 }
 
 /*
@@ -74,8 +68,7 @@ extern void crs_free(void *ptr)
 */
 extern void *crs_memcpy(void *dest, const void *src, size_t n)
 {
-    memcpy(dest,(void *)src,n);
-    return dest;
+    return memcpy(dest,(void *)src,n);
 }
 /*
 	function : 
@@ -91,7 +84,6 @@ extern void *crs_memcpy(void *dest, const void *src, size_t n)
 */
 extern void *crs_memset(void *s, int c, size_t n)
 {
-     memset(s, c, n);
-     return s;
+    return memset(s, c, n);
 }
 

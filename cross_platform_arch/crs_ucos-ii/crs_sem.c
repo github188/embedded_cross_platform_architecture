@@ -61,8 +61,8 @@ crs_sem_handler_t * crs_sem_create()
 	input : 
 		crs_sem_handler_t *sem : 信号量的handle
 	return value : 
-		success : 返回1
-		fail : 	返回0
+		success : 返回0
+		fail : 	返回-1
 */
 int32_t crs_sem_take(crs_sem_handler_t *sem)
 {
@@ -70,11 +70,11 @@ int32_t crs_sem_take(crs_sem_handler_t *sem)
 	if( 0 == ret )
 	{
 		crs_dbg("crs_sem_take falied\r\n");
-		return 0;
+		return -1;
 	}
 	else
 	{
-		return 1;
+		return 0;
 	}
 }
 
@@ -83,8 +83,8 @@ int32_t crs_sem_take(crs_sem_handler_t *sem)
 		释放信号量
 	input : 
 	return value : 
-		success : return 1
-		fail : 	return 0
+		success : return 0
+		fail : 	return -1
 */
 int32_t crs_sem_give(crs_sem_handler_t *sem)
 {
@@ -92,11 +92,11 @@ int32_t crs_sem_give(crs_sem_handler_t *sem)
 	if(0 == ret)
 	{
 		crs_dbg("crs_sem_give falied\r\n");
-		return 0;
+		return -1;
 	}
 	else
 	{
-		rturn 1;
+		return 0;
 	}
 }
 
@@ -109,22 +109,7 @@ int32_t crs_sem_give(crs_sem_handler_t *sem)
 		success :	
 		fail : 	
 */
-int32_t crs_sem_destroy(crs_sem_handler_t *sem)
+void crs_sem_destroy(crs_sem_handler_t *sem)
 {
 	vSemaphoreDelete(sem -> sem_cb);
-	if(NULL != sem->sem_cb)
-	{
-		crs_dbg("crs_sem_destroy failed\r\n");
-		return 0;
-	}
-	else
-	{
-		crs_memfree(sem);
-		if(NULL != sem)
-		{
-			crs_dbg("crs_sem_destroy failed\r\n");
-			return 0;
-		}
-		return 1;
-	}
 }

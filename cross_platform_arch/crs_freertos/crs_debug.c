@@ -1,15 +1,17 @@
-/*
+/* 				FreeRTOS
 *debug.c
 *debug manaement
 *调试的时候进行打印
 */
-#include <stdint.h>
-#include "stdio.h"
-#include <time.h>
+
+#include "crs_debug.h"
+#include "crs_types.h"
+#include "crs_mem.h"
+
+#include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include "common.h"
 /*
 	debug打印可以选择性关闭和开启	
 */
@@ -39,45 +41,18 @@ void crs_dbg_on(void) {
 */
 int32_t crs_dbg(const char *tmplate, ...)
 {
-	int iRet = 0;
-	
-	char *pcBuff, *pcTemp;
-	int iSize = 256;
-
-	va_list list;
-	pcBuff = (char*)malloc(iSize);
-	if(pcBuff == NULL)
+	if( crs_dbg_flag )
 	{
-	  return 0;
+		int8_t buf_print[512]={ 0 };
+		va_list args;
+		int32_t i = 0;
+		crs_memset(buf_print, 0, sizeof(buf_print));
+		va_start(args, tmplate);
+		i = vsnprintf(buf_print, sizeof(buf_print), tmplate, args);
+		va_end(args);
+		printf("%s", buf_print);
+		return i;
 	}
-	while(1 && crs_dbg_flag)
-	{
-		va_start(list,tmplate);
-		iRet = vsnprintf(pcBuff,iSize,tmplate,list);
-		va_end(list);
-		if(iRet > -1 && iRet < iSize)
-		{
-			break;
-		}
-		else
-		{
-			iSize*=2;
-			if((pcTemp=realloc(pcBuff,iSize))==NULL)
-			{ 
-			  Message("Could not reallocate memory\n\r");
-			  iRet = -1;
-			  break;
-			}
-			else
-			{
-			  pcBuff=pcTemp;
-			}		  
-		}
-	}          
-	Message(pcBuff);
-	Message("\r\n");
-	free(pcBuff);                 
-	return 0;
 }
 
 /*

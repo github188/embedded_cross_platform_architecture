@@ -54,8 +54,8 @@ struct crs_fd_set {
 		当writefds ！= NULL, readfds和exceptfds均为NULL时，表示fd集合有可写文件
 		当exceptfds ！= NULL，writefds和readfds均为NULL时，表示监视fd集合文件错误异常
 	return value : 
-		success :	
-		fail : 	
+		success :	0表示超时时间内没有数据,正值表示成功
+		fail : 	-1
 */
 extern int32_t crs_select(crs_socket_handler_t *fd[], uint32_t size, crs_fd_set_t *readfds, crs_fd_set_t *writefds, crs_fd_set_t *exceptfds, uint32_t *timeout_usec)
 {
@@ -81,6 +81,7 @@ extern int32_t crs_select(crs_socket_handler_t *fd[], uint32_t size, crs_fd_set_
 	function : 
 		创建文件集合			
 	input : 
+
 	return value : 
 		success :	
 		fail : 	
@@ -258,8 +259,11 @@ extern int32_t crs_getsock_info( crs_tcp_socket_handler_t *sock, crs_sock_info_t
 }
 /*
 	function : 
-					
+		对应于给定主机名的包含主机名字和地址信息的hostent结构指针
 	input : 
+		const int8_t *name ：
+		int8_t *ip
+ 	 	const size_t ip_size
 	return value : 
 		success :	
 		fail : 	
@@ -814,7 +818,6 @@ extern int32_t crs_udp_socket_join_multicast(crs_udp_socket_handler_t *sock, int
 	if(sl_SetSockOpt(fd, SL_IPPROTO_IP, SL_IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq))<0){
 			return -1;
 	};
-
 	return 0;
 }
 

@@ -78,24 +78,11 @@ int32_t crs_sem_post(crs_sem_handler_t *sem)
 	input :
 		crs_sem_handler_t *sem : 信号量的控制块
 	return value :
-		success : 0
-		fail : -1
+		success :
+		fail :
 */
-int32_t crs_sem_destroy(crs_sem_handler_t *sem)
+void crs_sem_destroy(crs_sem_handler_t *sem)
 {
-	int32_t retval = sem_destroy( &( sem -> sem_cb ) );
-	if( -1 == retval )
-	{
-		crs_dbg( "sem_destroy failed\e\n" );
-		crs_free( sem );
-		sem = NULL;
-		return -1;
-	}
-	else
-	{
-		crs_free( sem );
-		sem = NULL;
-		return 0;
-	}
+	sem_destroy( &( sem -> sem_cb ) );
 }
 

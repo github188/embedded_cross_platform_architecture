@@ -1,16 +1,17 @@
-/*
+/*			FreeRTOS
 *socket management
 *socket通信
 */
+#include "crs_socket.h"
+#include "crs_debug.h"
+#include "crs_mem.h"
+#include "crs_types.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
 #include "sockets.h"
-#include "crs_socket.h"
-#include "crs_debug.h"
-#include "crs_mem.h"
 #include "netdb.h"
 #include "lwip/ip_addr.h"
 
@@ -97,16 +98,16 @@ extern crs_fd_set_t * crs_fd_set_create()
 		crs_fd_set_t *set ： 文件集合
 	return value :
 		success : 返回 0
-		fail :
+		fail : -1
 */
 extern int32_t crs_fd_set_destroy(crs_fd_set_t *set)
 {
     if (NULL == set)
     {
-        return 0;
+        return -1;
     }
     crs_memset(set);
-    return 1;
+    return 0;
 }
 /*
 	function :
@@ -118,7 +119,7 @@ extern int32_t crs_fd_set_destroy(crs_fd_set_t *set)
 		success :
 		fail :
 */
-extern void crs_fd_clr(crs_socket_handler_t *fd, crs_fd_set_t *set)
+extern void crs_fd_clr( crs_socket_handler_t *fd, crs_fd_set_t *set )
 {
     if (NULL == fd)
     {
@@ -144,12 +145,12 @@ extern int32_t crs_fd_isset(crs_socket_handler_t *fd, crs_fd_set_t *set)
 {
     if (NULL == fd)
     {
-        return 0;
+        return -1;
     }
 
     if (NULL == set)
     {
-        return 0;
+        return -1;
     }
 
     return FD_ISSET(fd->fd, &(set->fds));
@@ -197,13 +198,16 @@ extern void crs_fd_zero(crs_fd_set_t *set)
 }
 /*
 	function :
-		将socket的port和sockaddr_in对应的结构体bind
+		把一个本地协议地址赋予一个socket;
+		对于网际协议,协议地址是32位的ipv4或者128位的ipv6地址与16位的TCP或UDP端口号的组合.
 	input :
-		crs_socket_handler_t *sock
-		uint16_t port
+		crs_tcp_socket_handler_t *sock : socket控制handle
+		char *ip ： 需要绑定的IP地址
+					如果ip == NULL ：绑定默认的IP地址
+		uint16_t port ： 需要绑定的端口
 	return value :
-		success : 1
-		fail : 0
+		success :	返回 0
+		fail : 	返回 -1
 */
 extern int32_t crs_bind(crs_socket_handler_t *sock, uint16_t port)
 {
@@ -215,60 +219,10 @@ extern int32_t crs_bind(crs_socket_handler_t *sock, uint16_t port)
 
     if (bind(sock->fd, (struct sockaddr *)&local_addr, sizeof(local_addr)) < 0)
     {
-        return 0;
+        return -1;
     }
 
-    return 1;
-}
-/*
-	function :
-		对对应的socket进行监听，监测客户端socket的连接请求
-	input :
-		crs_socket_handler_t *sock
- 	 	uint32_t backlog ：连接所能处理的最大监听连接数目，即服务器端所能接受的最多的客户端请求数
-	return value :
-		success : true
-		fail : false
-*/
-extern int32_t crs_listen(crs_socket_handler_t *sock, uint32_t backlog)
-{
-    if (listen(sock->fd, backlog) < 0)
-    {
-        return 0;
-    }
-    return 1;
-}
-/*
-	function :
-		接收客户端的socket的连接请求，获得客户端的socket信息
-	input :
-		crs_socket_handler_t *sock
-	return value :
-		success : return 客户端的socket
-		fail : return NULL
-*/
-extern crs_socket_handler_t *crs_accept(crs_socket_handler_t *sock)
-{
-    char str_ip[16];
-	memset(str_ip, 0,16);
-    crs_socket_handler_t *new_sock = (crs_socket_handler_t *) crs_malloc(sizeof(crs_socket_handler_t));
-    if (NULL == new_sock) {
-        return NULL;
-    }
-    memset(new_sock, 0, sizeof(crs_socket_handler_t));
-
-    struct sockaddr_in peeraddr;
-    socklen_t peeraddr_len;
-    new_sock->fd = accept(sock->fd, (struct sockaddr *)&peeraddr, &peeraddr_len);
-    if (0 > new_sock->fd) {
-        crs_memfree(new_sock);
-        return NULL;
-    }
-
-    strncpy(new_sock->sock_info.peer_ip, crs_inet_ntoa(peeraddr.sin_addr.s_addr,str_ip,16), sizeof(new_sock->sock_info.peer_ip) -1);
-    new_sock->sock_info.peer_port = ntohs(peeraddr.sin_port);
-
-    return new_sock;
+    return 0;
 }
 
 
@@ -287,29 +241,26 @@ typedef struct crs_sock_info_s {
     uint16_t peer_port;
     uint32_t sock_type;
 }crs_sock_info_t;
+
 /*
 	function :
-		获得所需要的socket的结构体信息
+		获取socket的信息，即得倒crs_sock_info_t结构体内表示的信息
 	input :
+		crs_tcp_socket_handler_t *sock ： scoket控制块
+		crs_sock_info_t *sock_info ： socket结构体指针，函数返回时传出socket的信息
 	return value :
-		success :
-		fail :
+		success :	0
+		fail : 	-1
 */
-extern int32_t crs_getsock_info(crs_socket_handler_t *sock, crs_sock_info_t *sock_info)
+extern int32_t crs_getsock_info( crs_tcp_socket_handler_t *sock, crs_sock_info_t *sock_info )
 {
-    mem_copy(sock_info, &sock->sock_info, sizeof(crs_sock_info_t));
+    if( NULL == crs_memcpy( sock_info, &sock -> sock_info, sizeof( crs_sock_info_t ) ) )
+    {
+    	return -1;
+    }
     return 0;
 }
 
-
-/*
-	function :
-
-	input :
-	return value :
-		success :
-		fail :
-*/
 /*
  * struct ip_addr {
   	  u32_t addr;
@@ -344,7 +295,8 @@ extern bool crs_gethostbyname(const char *name, char *ip, const uint8_t  ip_size
         crs_dbg("crs_gethostbyname %s alias: %s\n", name, *pptr);
     }
 
-    switch(hptr->h_addrtype) {
+    switch(hptr->h_addrtype)
+    {
         case AF_INET:
         	// 选择最后一个IP  TODO 后期随机选择一个
 			pptr = hptr->h_addr_list;
@@ -523,6 +475,56 @@ extern crs_socket_handler_t* crs_tcp_socket_create()
     sock->sock_type = SOCK_STREAM;
 
     return sock;
+}
+/*
+	function :
+		对对应的socket进行监听，监测客户端socket的连接请求
+	input :
+		crs_socket_handler_t *sock
+ 	 	uint32_t backlog ：连接所能处理的最大监听连接数目，即服务器端所能接受的最多的客户端请求数
+	return value :
+		success : true
+		fail : false
+*/
+extern int32_t crs_listen(crs_socket_handler_t *sock, uint32_t backlog)
+{
+    if (listen(sock->fd, backlog) < 0)
+    {
+        return 0;
+    }
+    return 1;
+}
+/*
+	function :
+		接收客户端的socket的连接请求，获得客户端的socket信息
+	input :
+		crs_socket_handler_t *sock
+	return value :
+		success : return 客户端的socket
+		fail : return NULL
+*/
+extern crs_socket_handler_t *crs_accept(crs_socket_handler_t *sock)
+{
+    char str_ip[16];
+	memset(str_ip, 0,16);
+    crs_socket_handler_t *new_sock = (crs_socket_handler_t *) crs_malloc(sizeof(crs_socket_handler_t));
+    if (NULL == new_sock) {
+        return NULL;
+    }
+    memset(new_sock, 0, sizeof(crs_socket_handler_t));
+
+    struct sockaddr_in peeraddr;
+    socklen_t peeraddr_len;
+    new_sock->fd = accept(sock->fd, (struct sockaddr *)&peeraddr, &peeraddr_len);
+    if (0 > new_sock->fd) {
+        crs_memfree(new_sock);
+        return NULL;
+    }
+
+    strncpy(new_sock->sock_info.peer_ip, crs_inet_ntoa(peeraddr.sin_addr.s_addr,str_ip,16), sizeof(new_sock->sock_info.peer_ip) -1);
+    new_sock->sock_info.peer_port = ntohs(peeraddr.sin_port);
+
+    return new_sock;
 }
 
 /*

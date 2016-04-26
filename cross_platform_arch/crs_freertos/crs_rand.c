@@ -1,20 +1,12 @@
-/*
+/*			FreeRTOS
 *rand 
 *随机数生成函数
 */
-#ifndef CRS_RAND_H
-#define CRS_RAND_H
-/*
-	function : 
-					
-	input : 
-	return value : 
-		success :	
-		fail : 	
-*/
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "crs_rand.h"
+#include "crs_types.h"
+
+#include <stdlib.h>
+
 /*
 	function : 
 		设置随机数种子
@@ -22,7 +14,10 @@ extern "C" {
 		uint32_t seed : 设置的随机数种子
 	return value :	无
 */
-void crs_srand(uint32_t seed);
+void crs_srand(uint32_t seed)
+{
+	srand( seed );
+}
 /*
 	function : 
 		产生一个随机数
@@ -34,11 +29,7 @@ void crs_srand(uint32_t seed);
 		返回一个随机数[0 ~ RAND_MAX]
 		
 */
-int32_t crs_rand( void );
-
-
-#ifdef __cplusplus
+int32_t crs_rand( void )
+{
+	return rand();
 }
-#endif
-
-#endif /*end of CRS_RAND_H*/

@@ -37,41 +37,8 @@
 		fail : 	
 */
 
-struct dana_file_handler_s {
-    int fd;
-    file_info_t *finfo;
-};
 
- /*
-	function : 
-		文件打开模式			
-	input : 
-	return value : 
-		success :	
-		fail : 	
-*/
-typedef enum 
-{	
-    fmode_r		= 0x0001,   	// 只读。    
-    fmode_w		= 0x0002,   	// 只写。如果文件不存在，则创建新文件，否则将清空文件，再写入。
-	fmode_a		= 0x0003,		// 追加。如果文件不存在，则创建新文件
-} file_mode_e;
 
-/*
- * 文件具有的基本属性
- */
-typedef struct 
-{
-    int8_t  file_name[STR_LEN];     // 用于标记该文件，具有唯一性，可以看作文件名
-    uint8_t file_name_len;    		// 文件名的长度，最多不超过60字节
-    uint64_t file_size;       		// 文件大小，以字节计算
-	uint64_t file_read_start;		//读文件的开始
-	uint64_t file_read_pos;		//读文件的位置
-	uint64_t file_read_end;		//能读的文件的末尾
-	uint64_t file_write_start;		//能写文件的开始
-	uint64_t file_write_pos;		//当前写文件的位置
-	uint64_t file_write_end;		//能写的文件的末尾
-} file_info_t;
 
 /************************ file 接口 *********************************/
 /*
@@ -137,7 +104,7 @@ extern crs_file_handler_t* crs_file_open(const int8_t *file_name, file_mode_e mo
 */
 extern int32_t crs_file_read(crs_file_handler_t *file, int8_t *buf, uint32_t n)
 {
-	return read(file -> finfo -> file_name, buf, n);
+	return read(file -> fd, buf, n);
 }
 
   /*
@@ -153,7 +120,7 @@ extern int32_t crs_file_read(crs_file_handler_t *file, int8_t *buf, uint32_t n)
 */
 extern int32_t crs_file_write(crs_file_handler_t *file, int8_t *buf, uint32_t n)
 {
-	return write ( file -> finfo -> file_name, buf, n);
+	return write ( file -> fd, buf, n);
 
 
 }
@@ -211,7 +178,7 @@ extern int32_t crs_file_close(crs_file_handler_t *file)
 	{
 		crs_dbg("file NULL or file close filed\r\n");
 	}
-	crs_free( file ->info );
+	crs_free( file -> info );
 	crs_free( file );
 }
 

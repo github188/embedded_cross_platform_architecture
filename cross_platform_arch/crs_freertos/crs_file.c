@@ -1,4 +1,4 @@
-/*
+/*			FreeRTOS
 *file management
 *文件操作
 *//*
@@ -7,164 +7,142 @@
  * Authored by Liao yangyang on: 2015年 09月 11日 星期五 17:05:50 CST
  *
  */
+#include "crs_file.h"
+#include "crs_types.h"
+#include "crs_mem.h"
+#include "crs_debug.h"
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "crs_file.h"
-#include "crs_types.h"
 
-struct crs_file_handler_s {
-    int * fp;
-    file_info_t info;
-};
+
 /*
 	function :
-
+		以mode方式打开文件，文件类型为file_type	，如果文件不存在，且mode为fmode_w或者fmode_a时，会创建新的文件
+		fmode :
+			fmode_r : 只读模式打开文件
+			fmode_w : 写模式打开文件（同时可以读）
+			fmode_a : 追加模式打开文件；如果文件存在，直接打开文件
+										如果文件不存在，则需要创建新文件
 	input :
+		const char *file_name : 字符串型文件名
+		file_mode_e mode ：操作文件的模式
 	return value :
-		success :
-		fail :
+		success :	返回文件的控制handle
+		fail : 	返回NULL
+		open ("helloq.txt", O_RDWR | O_CREAT , S_IRUSR | S_IWUSR)
 */
-#if 0
-extern crs_file_handler_t* crs_file_open(const char *file_name, file_mode_t mode)
+extern crs_file_handler_t* crs_file_open(const int8_t *file_name, file_mode_e mode)
 {
-    crs_file_handler_t *file = (crs_file_handler_t *)crs_malloc(sizeof(crs_file_handler_t));
-	file->fp = (int *)crs_malloc(sizeof(int)*3);	//handle,  w_offset,r_offset
-	SlFsFileInfo_t  pFsFileInfo;
-	int token=0;
-    if (NULL == file) {
-        return NULL;
-    }
-
-    if (fmode_r == mode) {
-         sl_FsOpen(file_name,FS_MODE_OPEN_READ,0,&(file->fp[0]));
-		 file->fp[1] = 0;
-		 file->fp[2] = 0;
-    } else if (fmode_w == mode) {
-   	     if(sl_FsOpen(file_name, FS_MODE_OPEN_WRITE, &token, &(file->fp[0]))==0){
-		 	    sl_FsClose(file->fp[0],NULL,0,0);
-				sl_FsDel(file_name,0);
-			}
-			sl_FsOpen(file_name, FS_MODE_OPEN_CREATE(65536, _FS_FILE_OPEN_FLAG_COMMIT|_FS_FILE_PUBLIC_WRITE),&token,&(file->fp[0]));
-			file->fp[1] = 0;
-			file->fp[2] = 0;
-
-    } else if (fmode_a == mode) {
-          if(sl_FsOpen(file_name, FS_MODE_OPEN_WRITE, &token, &(file->fp[0]))<0){
-				sl_FsOpen(file_name, FS_MODE_OPEN_CREATE(65536, _FS_FILE_OPEN_FLAG_COMMIT|_FS_FILE_PUBLIC_WRITE),&token,&(file->fp[0]));
-			};
-			if(sl_FsGetInfo(file_name,token, &pFsFileInfo)<0){
-
-					mem_Free((void *)(file->fp));
-					mem_Free(file);
-					return NULL;
-			}
-
-			file->fp[1] = pFsFileInfo.FileLen;
-			file->fp[2] = 0;
-    }
-
-    file->info.file_name_len = strlen(file_name);
-    strncpy(file->info.file_name, file_name, file->info.file_name_len);
-	file->info.file_size = pFsFileInfo.FileLen;
-	return file;
-
-}
-/*
-	function :
-
-	input :
-	return value :
-		success :
-		fail :
-*/
-extern int32_t crs_file_read(crs_file_handler_t *file, uint8_t *buf, uint32_t n)
-{
-     int val;
-	 val =0;
-	 if(file->fp[2] >=  file->info.file_size){
-	 	return 0;
-	 	}
-      val = sl_FsRead(file->fp[0],file->fp[2],buf,n);
-	  if(val < 0){
-		return  (-1);
-	  }
-
-	  file->fp[2] += val;
-	  return val;
-}
-/*
-	function :
-
-	input :
-	return value :
-		success :
-		fail :
-*/
-extern int32_t crs_file_write(crs_file_handler_t *file, uint8_t *buf, uint32_t n)
-{
-	int val=0;
-	val = sl_FsWrite(file->fp[0],file->fp[1],buf,n);
-	if( val< 0){
-				return (-1);
-	}
-
-	file->fp[1] +=val;
-	file->info.file_size += val;
-    return  val;
-}
-/*
-	function :
-
-	input :
-	return value :
-		success :
-		fail :
-*/
-extern int32_t crs_file_get_info(crs_file_handler_t *file, file_info_t *info)
-{
-    memcpy(info, &file->info, sizeof(file_info_t));
-    return 0;
-}
-/*
-	function :
-
-	input :
-	return value :
-		success :
-		fail :
-*/
-extern int32_t crs_file_seek(crs_file_handler_t *file, uint32_t pos)
-{
-    if(pos < 0){
-		return (-1);
-    }
-    if (pos > file->info.file_size) {
-		file->fp[1] = file->info.file_size;
-		file->fp[2] = file->info.file_size;
-        return 0;
-    } else {
-        file->fp[1] = pos;
-		file->fp[2] = pos;
-		return 0;
+	crs_file_handler_t *file_handle = (crs_file_handler_t *)crs_malloc(sizeof(crs_file_handler_t));
+	crs_memcpy( file_handle -> finfo -> file_name, file_name, crs_strlen(file_name));
+	file_handle -> finfo -> file_name_len = crs_strlen(file_name);
+	switch (mode)
+	{
+	case fmode_r :
+			file_handle -> fd = open( file_name, O_RDONLY ,  S_IRUSR | S_IWUSR); break;
+			return file_handle;
+	case fmode_w:
+			file_handle -> fd = open(file_name, O_WRONLY , S_IRUSR | S_IWUSR); break;
+			return file_handle;
+	case fmode_a:
+			file_handle -> fd = open(file_name, O_APPEND | O_CREAT, S_IRUSR | S_IWUSR); break;
+			return file_handle;
+	default :
+			return NULL;
 	}
 }
-/*
-	function :
 
+  /*
+	function :
+		从file中读取数据到buf[0:n)中
 	input :
+		crs_file_handler_t *file : 文件控制handle，内部指向文件描述符
+		int8_t *buf ：存储所读取数据的缓存
+		uint32_t n ： 所需要读取的字节数
 	return value :
-		success :
-		fail :
+		success : 返回 0，表示已经读取0个字节，返回正数，表示读取到的字节数
+		fail : 返回 -1：表示读取发生错误
+*/
+extern int32_t crs_file_read(crs_file_handler_t *file, int8_t *buf, uint32_t n)
+{
+	return read(file -> fd, buf, n);
+}
+
+  /*
+	function :
+		向file中写入buf[0:n)
+	input :
+		crs_file_handler_t *file ： 文件控制handle，内部指向文件描述符
+		int8_t *buf ：存储所要写入的数据的缓存
+		uint32_t n ： 写入的字节数
+	return value :
+		success : 返回值为0：表示没有写入数据， 返回值为正数：表示写入的字节数
+ 		fail : 返回值为-1：表示写入发生错误
+*/
+extern int32_t crs_file_write(crs_file_handler_t *file, int8_t *buf, uint32_t n)
+{
+	return write ( file -> fd, buf, n);
+
+
+}
+  /*
+	function :
+		获取文件的信息
+	input :
+		crs_file_handler_t *file : 文件控制handle
+		file_info_t *info : 描述文件的结构体
+	return value :
+		success : 将file指针指向的文件的相关的信息赋值到file_info结构体中,同时返回0
+		fail : 返回 -1
+*/
+extern int32_t crs_file_get_info(crs_file_handler_t *file, file_info_t *finfo)
+{
+	file_info_t *finfo_t = crs_malloc( sizeof( file_info_t ));
+
+	if(NULL == file || NULL == file -> finfo)
+	{
+		crs_dbg("file info is NULL\r\n");
+		return -1;
+	}
+	crs_memcpy( finfo, file -> finfo);
+	return 0;
+}
+ /*
+	function :
+		从whence处算起,移动文件读写指针到文件的离whence第pos个字节处
+	input :
+		crs_file_handler_t *file : 文件控制handle
+		uint32_t pos :
+
+	return value :
+		success : 文件指针指向
+		fail : 返回0
+*/
+extern int32_t crs_file_seek(crs_file_handler_t *file, int32_t pos, int32_t whence)
+{
+	return lseek( file -> fd , pos, whence);
+}
+
+  /*
+	function :
+		关闭文件
+	input :
+		crs_file_handler_t *file : 文件控制handle
+	return value :
+		success : 返回 1
+		fail : 返回 0
 */
 extern int32_t crs_file_close(crs_file_handler_t *file)
 {
-    sl_FsClose(file->fp[0],0,0,0);
-	mem_Free(file->fp);
-	mem_Free(file);
-    return 0;
+
+	if (file == NULL || -1 == close(file -> fd))
+	{
+		crs_dbg("file NULL or file close filed\r\n");
+	}
+	crs_free( file -> info );
+	crs_free( file );
 }
-#endif
 

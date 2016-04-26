@@ -1,4 +1,4 @@
-/*
+/*		FreeRTOS
 *sem.c
 *semaphore management
 *信号量的创建,使用,删除等
@@ -11,9 +11,13 @@
 		success :	
 		fail : 	
 */
-#include "semphr.h"
+
 #include "crs_mem.h"
 #include "crs_sem.h"
+#include "crs_types.h"
+#include "crs_debug.h"
+
+#include "semphr.h"
 /*
 	function : 
 		信号量的handle			
@@ -38,14 +42,14 @@ struct crs_sem_handler_s
 */
 crs_sem_handler_t * crs_sem_create()
 {
-	crs_sem_handler_t *crs_sem_handler = (crs_sem_handler_t *)crs_malloc(sizeof(crs_sem_handler_t));
-	if (NULL == crs_sem_handler)
+	crs_sem_handler_t *crs_sem_handler = ( crs_sem_handler_t * )crs_malloc( sizeof( crs_sem_handler_t ) );
+	if ( NULL == crs_sem_handler )
 	{
 		return NULL;
 	}
 
-	vSemaphoreCreateBinary(crs_sem_handler->sem_cb);
-	if(NULL == crs_sem_handler->sem_cb)
+	vSemaphoreCreateBinary( crs_sem_handler -> sem_cb );
+	if( NULL == crs_sem_handler -> sem_cb )
 	{
 		crs_dbg("crs_sem.c vSemaphoreCreateBinary failed\r\n");
 		return NULL;
@@ -63,7 +67,7 @@ crs_sem_handler_t * crs_sem_create()
 		success : 返回1
 		fail : 	返回0
 */
-int32_t crs_sem_wait(crs_sem_handler_t *sem)
+int32_t crs_sem_wait( crs_sem_handler_t *sem )
 {
 	int32_t ret = xSemaphoreTake( sem->sem_cb, crs_wait_forever );
 	if( 0 == ret )
@@ -82,20 +86,20 @@ int32_t crs_sem_wait(crs_sem_handler_t *sem)
 		触发信号量
 	input : 
 	return value : 
-		success : return 0
-		fail : 	return -1
+		success : return 1
+		fail : 	return 0
 */
-int32_t crs_sem_post(crs_sem_handler_t *sem)
+int32_t crs_sem_post( crs_sem_handler_t *sem )
 {
 	int ret = xSemaphoreGive( sem_sem_cb );
-	if(0 == ret)
+	if( 0 == ret )
 	{
 		crs_dbg("crs_sem_give falied\r\n");
-		return 0;
+		return -1;
 	}
 	else
 	{
-		rturn 1;
+		return 0;
 	}
 }
 
@@ -105,25 +109,10 @@ int32_t crs_sem_post(crs_sem_handler_t *sem)
 	input : 
 		crs_sem_handler_t *sem  
 	return value : 
-		success :	
+		success :
 		fail : 	
 */
-int32_t crs_sem_destroy(crs_sem_handler_t *sem)
+void crs_sem_destroy( crs_sem_handler_t *sem )
 {
 	vSemaphoreDelete(sem -> sem_cb);
-	if(NULL != sem->sem_cb)
-	{
-		crs_dbg("crs_sem_destroy failed\r\n");
-		return 0;
-	}
-	else
-	{
-		crs_memfree(sem);
-		if(NULL != sem)
-		{
-			crs_dbg("crs_sem_destroy failed\r\n");
-			return 0;
-		}
-		return 1;
-	}
 }

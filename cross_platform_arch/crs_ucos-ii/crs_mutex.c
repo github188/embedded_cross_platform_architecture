@@ -1,5 +1,5 @@
-/*
-*mutex.h
+/*			ucos-ii
+*mutex.c
 *mutex management
 *mutex锁的创建,使用和删除等操作
 */

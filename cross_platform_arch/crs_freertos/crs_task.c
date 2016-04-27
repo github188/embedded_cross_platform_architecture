@@ -12,9 +12,6 @@ struct crs_task_handler_s {
 	TaskHandle_t task_handle;
 };
 
-// ptask_t_is_valid
-// detach
-// join
  /*
 	function :
 

@@ -1,4 +1,4 @@
-/*
+/*			FreeRTOS
 *time.c
 *time management
 *时间的管理,计时器使用
@@ -33,4 +33,19 @@ extern uint32_t crs_usleep(uint32_t microseconds)
 {
 	vTaskDelay( microseconds / 1000);
 	return 1;
+}
+
+/*
+	function :
+		睡眠 单位ms (1/10^6)second
+	input :
+		uint32_t milliseconds ：所需要睡眠的时间
+	return value :
+		success : 当前task会让出cpu，在睡眠millisconds后继续运行 return 0
+		fail :
+*/
+extern uint32_t crs_sleep(uint32_t  milliseconds)
+{
+	vTaskDelay( milliseconds );
+	return 0;
 }

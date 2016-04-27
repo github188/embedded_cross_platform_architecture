@@ -64,8 +64,8 @@ crs_sem_handler_t * crs_sem_create()
 	input : 
 		crs_sem_handler_t *sem : 信号量的handle
 	return value : 
-		success : 返回1
-		fail : 	返回0
+		success : 返回0
+		fail : 	返回-1
 */
 int32_t crs_sem_wait( crs_sem_handler_t *sem )
 {
@@ -73,11 +73,11 @@ int32_t crs_sem_wait( crs_sem_handler_t *sem )
 	if( 0 == ret )
 	{
 		crs_dbg("crs_sem_take falied\r\n");
-		return 0;
+		return -1;
 	}
 	else
 	{
-		return 1;
+		return 0;
 	}
 }
 
@@ -91,7 +91,7 @@ int32_t crs_sem_wait( crs_sem_handler_t *sem )
 */
 int32_t crs_sem_post( crs_sem_handler_t *sem )
 {
-	int ret = xSemaphoreGive( sem_sem_cb );
+	int ret = xSemaphoreGive(  sem -> sem_cb );
 	if( 0 == ret )
 	{
 		crs_dbg("crs_sem_give falied\r\n");

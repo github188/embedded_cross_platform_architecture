@@ -1,15 +1,15 @@
-/*
+/*				ucos-ii
 *crs_mem.c
 *	memory management
 *	
 	内存的创建,删除
 */
 
-
-
-#include "os_dmem.h"
 #include "crs_mem.h"
 #include "crs_types.h"
+
+#include "os_dmem.h"
+
 /*
 	function : 
 					
@@ -91,6 +91,10 @@ extern void crs_free(void *ptr)
 */
 extern void *crs_memcpy(void *dest, const void *src, size_t n)
 {
+	if( NULL == dest || NULL == src)
+	{
+		return NULL;
+	}
     memcpy(dest,(void *)src,n);
     return dest;
 }

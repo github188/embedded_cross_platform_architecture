@@ -1,19 +1,10 @@
-#ifndef _CRS_ATOMIC_H_
-#define _CRS_ATOMIC_H_
- /*
-	function :
 
-	input :
-	return value :
-		success :
-		fail :
+ /*			ucos-ii
+  * crs_atomic.c
+  * 原子操作
 */
 #include "crs_type.h"
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#include "crs_atomic.h"
 
  /*
 	function :

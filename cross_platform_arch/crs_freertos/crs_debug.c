@@ -24,7 +24,8 @@ static bool crs_dbg_flag = 0;
 		success :	
 		fail : 	
 */
-void crs_dbg_on(void) {
+void crs_dbg_on( )
+{
     crs_dbg_flag = 1;   
 }
 
@@ -63,7 +64,8 @@ int32_t crs_dbg(const char *tmplate, ...)
 		success :	
 		fail : 	
 */
-void crs_dbg_off(void) {
+void crs_dbg_off( )
+{
     crs_dbg_flag = 0;
 }
 

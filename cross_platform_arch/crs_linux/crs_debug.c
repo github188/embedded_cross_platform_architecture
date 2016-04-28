@@ -20,7 +20,7 @@ static bool crs_dbg_flag = 0;
 		success :	
 		fail : 	
 */
-extern void crs_dbg_on(void)
+extern void crs_dbg_on( )
 {
 	crs_dbg_flag = 1;
 }
@@ -57,7 +57,7 @@ extern int32_t crs_dbg(const int8_t* tmplate,...)
 		success :	
 		fail : 	
 */
-extern void crs_dbg_off(void)
+extern void crs_dbg_off( )
 {
 	crs_dbg_flag = 0;
 }

@@ -1,4 +1,12 @@
-code for the linux
+code for the ucos-ii
 
-mem.c
-mutex.c
+crs_debug.c
+crs_mem.c
+crs_mutex.c
+crs_queu.c
+crs_rand.c
+crs_sem.c
+crs_str.c
+crs_task.c
+crs_time.c
+

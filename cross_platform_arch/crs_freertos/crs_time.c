@@ -6,7 +6,7 @@
 
  /*
 	function :
-		获取系统启动时间 us
+		获取系统启动时间ms
 	input :
 	return value :
 		success : 返回从开机到目前的绝对时间
@@ -15,7 +15,6 @@
 extern int64_t crs_uptime()
 {
 	int64_t timecnt = xTaskGetTickCount();
-	return timecnt * 1000;
 }
 
   /*

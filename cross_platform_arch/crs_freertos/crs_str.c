@@ -115,20 +115,17 @@ extern int32_t crs_strncmp ( const int8_t * dest, const int8_t * src, size_t n )
 		success :	
 		fail : 	
 */
-extern void  crs_printf(int8_t *args,...)
+extern int32_t  crs_printf(int8_t *tmplate,...)
 {
-	va_list args;
-	va_start( args, tmplate );
-	time_t currtime;
-	time( &currtime );
-	char date[64] = { 0 };
-	ctime_r( &currtime, date ); // should never failed
-	date[ strlen( date ) - 1 ] = '\0';
-	printf( "%s ", date );
-    printf( " : " );
-	vprintf( tmplate, args );
-	va_end( args );
-	return 0;
+		int8_t buf_print[512]={ 0 };
+		va_list args;
+		int32_t i = 0;
+		crs_memset(buf_print, 0, sizeof(buf_print));
+		va_start(args, tmplate);
+		i = vsnprintf(buf_print, sizeof(buf_print), tmplate, args);
+		va_end(args);
+		printf("%s", buf_print);
+		return i;
 }
 /*
 	function : 
@@ -157,7 +154,7 @@ extern int32_t crs_vsnprintf(int8_t *s, uint32_t size, const int8_t *template, v
 		fail : 	返回0
 			
 */
-extern int32_t crs_atoi(const int8_t *s);
+extern int32_t crs_atoi(const int8_t *s)
 {
 	return atoi( s );
 }

@@ -1,23 +1,21 @@
 /*			FreeRTOS
+ * crs_file.c
 *file management
 *文件操作
-*//*
- * Copyright(c)  Shen zhen Danale Telecommunication Corp.
- *
- * Authored by Liao yangyang on: 2015年 09月 11日 星期五 17:05:50 CST
- *
- */
+*/
 #include "crs_file.h"
 #include "crs_types.h"
 #include "crs_mem.h"
 #include "crs_debug.h"
 
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-
+#include "simplelink.h"
+#include "hw_types.h"
+#include "hw_ints.h"
+#include "fs.h"
 /*
 	function :
 		以mode方式打开文件，文件类型为file_type	，如果文件不存在，且mode为fmode_w或者fmode_a时，会创建新的文件
@@ -34,25 +32,54 @@
 		fail : 	返回NULL
 		open ("helloq.txt", O_RDWR | O_CREAT , S_IRUSR | S_IWUSR)
 */
-extern crs_file_handler_t* crs_file_open(const int8_t *file_name, file_mode_e mode)
+extern crs_file_handler_t* crs_file_open(const char *file_name, file_mode_e mode)
 {
-	crs_file_handler_t *file_handle = (crs_file_handler_t *)crs_malloc(sizeof(crs_file_handler_t));
-	crs_memcpy( file_handle -> finfo -> file_name, file_name, crs_strlen(file_name));
-	file_handle -> finfo -> file_name_len = crs_strlen(file_name);
-	switch (mode)
-	{
-	case fmode_r :
-			file_handle -> fd = open( file_name, O_RDONLY ,  S_IRUSR | S_IWUSR); break;
-			return file_handle;
-	case fmode_w:
-			file_handle -> fd = open(file_name, O_WRONLY , S_IRUSR | S_IWUSR); break;
-			return file_handle;
-	case fmode_a:
-			file_handle -> fd = open(file_name, O_APPEND | O_CREAT, S_IRUSR | S_IWUSR); break;
-			return file_handle;
-	default :
-			return NULL;
-	}
+    crs_file_handler_t *file = (crs_file_handler_t *)crs_malloc(sizeof(crs_file_handler_t));
+	file -> fp = (int *)crs_malloc(sizeof(int));	//handle,  w_offset, r_offset
+	SlFsFileInfo_t  pFsFileInfo;
+	int32_t token = 0;
+    if (NULL == file)
+    {
+        return NULL;
+    }
+
+    if (fmode_r == mode)
+    {
+         int32_t ret = sl_FsOpen(file_name, FS_MODE_OPEN_READ, 0, file->fp );
+		 file->finfo->write_pos = 0;
+		 file->finfo->read_pos = 0;
+    }
+    else if (fmode_w == mode)
+    {
+   	     if(sl_FsOpen(file_name, FS_MODE_OPEN_WRITE, &token, file->fp )==0)
+   	     {
+		 	    sl_FsClose(file->fp, NULL, 0, 0);
+				sl_FsDel(file_name, 0);
+		 }
+			sl_FsOpen( file_name, FS_MODE_OPEN_CREATE( 65536, _FS_FILE_OPEN_FLAG_COMMIT |_FS_FILE_PUBLIC_WRITE), &token, file->fp  );
+			file->finfo->write_pos = 0;
+			file->finfo->read_pos = 0;
+
+    }
+    else if ( fmode_a == mode )
+    {
+          if(sl_FsOpen(file_name, FS_MODE_OPEN_WRITE, &token, &(file->fp))<0)
+          {
+				sl_FsOpen(file_name, FS_MODE_OPEN_CREATE(65536, _FS_FILE_OPEN_FLAG_COMMIT |_FS_FILE_PUBLIC_WRITE), &token, file->fp );
+          }
+          if(sl_FsGetInfo(file_name, token, &pFsFileInfo)<0)
+          {
+				crs_free((void *)( file->fp ));
+				crs_free( file );
+				return NULL;
+          }
+			file->finfo->write_pos = pFsFileInfo.FileLen;
+			file->finfo->read_pos = 0;
+    }
+    file->finfo->file_name_len = crs_strlen( file_name );
+    crs_strncpy(file->finfo->file_name, file_name, file->finfo->file_name_len);
+	file->finfo->file_size = pFsFileInfo.FileLen;
+	return file;
 }
 
   /*
@@ -68,9 +95,21 @@ extern crs_file_handler_t* crs_file_open(const int8_t *file_name, file_mode_e mo
 */
 extern int32_t crs_file_read(crs_file_handler_t *file, int8_t *buf, uint32_t n)
 {
-	return read(file -> fd, buf, n);
-}
+     int val;
+	 val = 0;
+	 if(file -> finfo->read_pos >=  file -> finfo -> file_size)
+	 {
+	 	return 0;
+	 }
+     val = sl_FsRead( *(file -> fp), file->finfo->read_pos, buf, n);
+	 if(val < 0)
+	 {
+		return  (-1);
+	 }
 
+	 file -> finfo->read_pos += val;
+	 return val;
+}
   /*
 	function :
 		向file中写入buf[0:n)
@@ -84,9 +123,16 @@ extern int32_t crs_file_read(crs_file_handler_t *file, int8_t *buf, uint32_t n)
 */
 extern int32_t crs_file_write(crs_file_handler_t *file, int8_t *buf, uint32_t n)
 {
-	return write ( file -> fd, buf, n);
+	int val=0;
+	val = sl_FsWrite( *(file -> fp), file->finfo->write_pos, buf, n);
+	if( val< 0)
+	{
+		return (-1);
+	}
 
-
+	file->finfo->write_pos += val;
+	file->finfo->file_size += val;
+    return  val;
 }
   /*
 	function :
@@ -107,7 +153,7 @@ extern int32_t crs_file_get_info(crs_file_handler_t *file, file_info_t *finfo)
 		crs_dbg("file info is NULL\r\n");
 		return -1;
 	}
-	crs_memcpy( finfo, file -> finfo);
+	crs_memcpy( finfo, file -> finfo, sizeof(file_info_t) );
 	return 0;
 }
  /*
@@ -119,13 +165,35 @@ extern int32_t crs_file_get_info(crs_file_handler_t *file, file_info_t *finfo)
 
 	return value :
 		success : 文件指针指向
-		fail : 返回0
+		fail : -1
 */
 extern int32_t crs_file_seek(crs_file_handler_t *file, int32_t pos, int32_t whence)
 {
-	return lseek( file -> fd , pos, whence);
+	int64_t fromwhere = 0;
+	switch(whence)
+	{
+		case 0: fromwhere = 0;		break;				//从文件头开始算位置
+		case 1:	fromwhere = file -> finfo -> read;	break;//从当前位置处算
+		case 2:	fromwhere = file -> file_size;		break;//从文件末尾开始算
+		default: crs_dbg("whence is beyond 0,1,2\r\n"); from_where = file -> file_size; break;
+	}
+    if(pos + fromwhere < 0 )
+    {
+		return (-1);
+    }
+    if (pos + fromwhere > file-> finfo -> file_size)
+    {
+		file->finfo->write_pos = file->finfo->file_size;
+		file->finfo->read_pos = file->finfo->file_size;
+        return 0;
+    }
+    else
+    {
+        file->finfo->write_pos = pos + fromwhere;
+		file->finfo->read_pos = pos + fromwhere;
+		return 0;
+	}
 }
-
   /*
 	function :
 		关闭文件
@@ -138,7 +206,7 @@ extern int32_t crs_file_seek(crs_file_handler_t *file, int32_t pos, int32_t when
 extern int32_t crs_file_close(crs_file_handler_t *file)
 {
 
-	if (file == NULL || -1 == close(file -> fd))
+	if (file == NULL || -1 == sl_FsClose( *(file -> fp) ))
 	{
 		crs_dbg("file NULL or file close filed\r\n");
 	}

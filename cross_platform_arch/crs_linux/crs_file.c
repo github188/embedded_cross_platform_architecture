@@ -1,4 +1,5 @@
 /*				linux
+ * crs_file.c
 *file management
 *文件操作
 */
@@ -20,39 +21,8 @@
 	SEEK_CUR表示从文件指针当前位置开始
 	SEEK_END表示从文件末尾位置算起
 */
-#define SEEK_SET 0	
-#define SEEK_CUR 1
-#define SEEK_END 2
-
-
-/*
- * 文件操作接口
- */
- /*
-	function : 
-					
-	input : 
-	return value : 
-		success :	
-		fail : 	
-*/
-
-
-
 
 /************************ file 接口 *********************************/
-/*
-	function : 
-		创建一个mode的新的文件,返回文件描述符	
-	input : 
-		const int8_t *file_name : 文件名,可以是绝对地址,也可以是相对地址
-		file_mode_e mode : 文件创建之后就可以进行相应的读写了,mode表示之后具有的对文件操作的模式
-	return value : 
-		success : 返回文件控制handle
-		fail : 	返回NULL
-*/
-//extern crs_file_handler_t* crs_file_create(const int8_t *file_name, file_mode_e mode);
-
 
  /*
 	function : 
@@ -75,19 +45,44 @@ extern crs_file_handler_t* crs_file_open(const int8_t *file_name, file_mode_e mo
 	crs_file_handler_t *file_handle = (crs_file_handler_t *)crs_malloc(sizeof(crs_file_handler_t));
 	crs_memcpy( file_handle -> finfo -> file_name, file_name, crs_strlen(file_name));
 	file_handle -> finfo -> file_name_len = crs_strlen(file_name);
-	switch (mode)
+
+	if( NULL == file_name )
 	{
-	case fmode_r :
-			file_handle -> fd = open( file_name, O_RDONLY ,  S_IRUSR | S_IWUSR); break;
-			return file_handle;
-	case fmode_w:
-			file_handle -> fd = open(file_name, O_WRONLY , S_IRUSR | S_IWUSR); break;
-			return file_handle;
-	case fmode_a:
-			file_handle -> fd = open(file_name, O_APPEND | O_CREAT, S_IRUSR | S_IWUSR); break;
-			return file_handle;
-	default :
+		crs_dbg(" file name is NULL\r\n");
+		return NULL;
+	}
+	if( fmode_r == mode )
+	{
+		if( -1 == ( *( file_handle  -> fd) = open( file_name, O_RDONLY ,  S_IRUSR | S_IWUSR) ))
+		{
+			crs_dbg( "open file failed\r\n");
+			crs_free(file_handle);
 			return NULL;
+		}
+		 file_handle ->finfo -> write_pos = 0;
+		 file_handle -> finfo -> read_pos = 0;
+	}
+	else if( fmode_w == mode)
+	{
+		if( -1 == ( *( file_handle  -> fd) = open(file_name, O_WRONLY , S_IRUSR | S_IWUSR) ) )
+		{
+			crs_dbg( "open file failed\r\n");
+			crs_free(file_handle);
+			return NULL;
+		}
+		 file_handle ->finfo -> write_pos = 0;
+		 file_handle -> finfo -> read_pos = 0;
+	}
+	else if(fmode_a == mode)
+	{
+		if( -1 == ( *( file_handle  -> fd) = open(file_name, O_APPEND | O_CREAT, S_IRUSR | S_IWUSR) ) )
+		{
+			crs_dbg( "open file failed\r\n");
+			crs_free(file_handle);
+			return NULL;
+		}
+		 file_handle ->finfo -> write_pos = 0;
+		 file_handle -> finfo -> read_pos = 0;
 	}
 }
 
@@ -104,7 +99,19 @@ extern crs_file_handler_t* crs_file_open(const int8_t *file_name, file_mode_e mo
 */
 extern int32_t crs_file_read(crs_file_handler_t *file, int8_t *buf, uint32_t n)
 {
-	return read(file -> fd, buf, n);
+	if(file -> finfo -> read_pos >=  file -> finfo -> file_size)
+	{
+		return 0;
+	}
+	int32_t ret = read( *( file_handle  -> fd), buf, n);
+	if(-1 == ret)
+	{
+		crs_dbg("read file failed\r\n");
+		return -1;
+	}
+
+	file -> finfo -> read_pos += ret;
+	return ret;
 }
 
   /*
@@ -120,9 +127,15 @@ extern int32_t crs_file_read(crs_file_handler_t *file, int8_t *buf, uint32_t n)
 */
 extern int32_t crs_file_write(crs_file_handler_t *file, int8_t *buf, uint32_t n)
 {
-	return write ( file -> fd, buf, n);
-
-
+	int ret = write (  *( file_handle  -> fd), buf, n);
+	if( -1 == ret )
+	{
+		crs_dbg( "write file failed\r\n");
+		return -1;
+	}
+	file -> finfo -> write_pos += ret;
+	file->finfo->file_size += ret;
+	return ret;
 }
   /*
 	function :
@@ -154,12 +167,36 @@ extern int32_t crs_file_get_info(crs_file_handler_t *file, file_info_t *finfo)
 		uint32_t pos : 
 			
 	return value :
-		success : 文件指针指向
-		fail : 返回0
+		success : 0
+		fail : 返回-1
 */
 extern int32_t crs_file_seek(crs_file_handler_t *file, int32_t pos, int32_t whence)
 {
-	return lseek( file -> fd , pos, whence);
+	int64_t fromwhere = 0;
+	switch(whence)
+	{
+		case 0: fromwhere = 0;		break;				//从文件头开始算位置
+		case 1:	fromwhere = file -> finfo -> read;	break;//从当前位置处算
+		case 2:	fromwhere = file -> file_size;		break;//从文件末尾开始算
+		default: crs_dbg("whence is beyond 0,1,2\r\n"); from_where = file -> file_size; break;
+	}
+
+	if(pos + fromwhere < 0 )
+	{
+		return (-1);
+	}
+	if (pos + fromwhere > file-> finfo -> file_size)
+	{
+		file->finfo->write_pos = file->finfo->file_size;
+		file->finfo->read_pos = file->finfo->file_size;
+		return 0;
+	}
+	else
+	{
+		file->finfo->write_pos = pos + fromwhere;
+		file->finfo->read_pos = pos + fromwhere;
+		return 0;
+	}
 }
 
   /*
@@ -174,7 +211,7 @@ extern int32_t crs_file_seek(crs_file_handler_t *file, int32_t pos, int32_t when
 extern int32_t crs_file_close(crs_file_handler_t *file)
 {
 
-	if (file == NULL || -1 == close(file -> fd))
+	if (file == NULL || -1 == close( *( file_handle  -> fd) ) )
 	{
 		crs_dbg("file NULL or file close filed\r\n");
 	}

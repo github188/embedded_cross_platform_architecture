@@ -1,4 +1,4 @@
-/*
+/*				ucos-ii
 *debug.c
 *debug manaement
 *调试的时候进行打印

@@ -1,5 +1,5 @@
-/*
-*crs_queue.h
+/*		ucos-ii
+*crs_queue.c
 *queue management
 *队列的创建,使用和删除等
 */
@@ -37,34 +37,24 @@ struct crs_queue_cb_s{
 		success :	
 		fail : 	
 */
-crs_queue_cb_t *crs_create_queue(int8_t queue_size, int16_t element_size, uint8_t *err_code)
-{
-	crs_queue_cb_t *queue = NULL;
-	queue = (crs_queue_cb_t *) crs_malloc( sizeof (crs_queue_cb_t) );
-	if(queue_size <= 0 || element_size <= 0)
-	{
-		crs_dbg("crs_create_queue queue_size of element size error,please check!\r\n");
+dana_queue_cb_t *dana_create_queue(int8_t queue_size, int16_t element_size,
+		uint8_t *err_code){
+	dana_queue_cb_t *queue=NULL;
+	queue=(dana_queue_cb_t *) dana_malloc(sizeof(dana_queue_cb_t));
+	queue->queue_cb->OSEventType = OS_EVENT_TYPE_Q;
+
+	if(NULL==queue){
 		*err_code = QUEUE_CREATE_FAIL;
 		return NULL;
 	}
-	
-	if(NULL == queue)
-	{
-		*err_code = QUEUE_CREATE_FAIL;
+	queue->queue_cb = OSQCreate(queue_size, element_size);
+	if(queue->queue_cb != 0) {
+		*err_code=QUEUE_SUCCESS;
+		return queue;
+	}else{
+        dana_free(queue);
+		*err_code=QUEUE_CREATE_FAIL;
 		return NULL;
-	}
-	
-	queue = xQueueCreate( queue_size, element_size)
-	if ( queue == NULL) 
-	{
-		*err_code = QUEUE_CREATE_FAIL;
-		crs_free(queue);
-		return NULL;
-	} 
-	else 
-	{
-		*err_code = QUEUE_SUCCESS;
-		return (crs_queue_cb_t)queue;
 	}
 }
 /*
@@ -79,33 +69,25 @@ crs_queue_cb_t *crs_create_queue(int8_t queue_size, int16_t element_size, uint8_
 		success :	
 		fail : 	
 */
-void crs_queue_write(crs_queue_cb_t* cb, void* message, int32_t timeout_ms, uint8_t *err_code)
+
+void dana_write_queue(dana_queue_cb_t* cb, void* message, int32_t timeout_ms,uint8_t *err_code)
 {
-    if(0 == timeout_ms) 
-	{	//equivalent to xQueueSendToBack()
-		if (crs_failed == xQueueSend(&(cb->queue_cb), message, CRS_WAIT_FOREVER)) 
-		{
-			*err_code = QUEUE_WRITE_FALI;
-			return ;
-		} 
-		else 
-		{
-			*err_code = QUEUE_SUCCESS;
-			crs_dbg("crs_write_queue write suceess\n");
-            return;
-		}
-    } 
-	else 
-	{
-		if (crs_failed == xQueueSend(&(cb->queue_cb), message, timeout_ms)) 
-		{
+    if(0 == timeout_ms) {
+		if (osi_MsgQWrite(&(cb->queue_cb), message, OSI_WAIT_FOREVER) < 0) {
 			*err_code=QUEUE_WRITE_FALI;
 			return ;
-		} 
-		else 
-		{
+		} else {
 			*err_code = QUEUE_SUCCESS;
-			crs_dbg("crs_write_queue write suceess\n");
+			dana_dbg("dana_write_queue write suceess\n");
+            return;
+		}
+    } else {
+		if (osi_MsgQWrite(&(cb->queue_cb), message, timeout_ms) < 0) {
+			*err_code=QUEUE_WRITE_FALI;
+			return ;
+		} else {
+			*err_code = QUEUE_SUCCESS;
+			dana_dbg("dana_write_queue write suceess\n");
             return;
 		}
 	}
@@ -122,37 +104,30 @@ void crs_queue_write(crs_queue_cb_t* cb, void* message, int32_t timeout_ms, uint
 		success :	
 		fail : 	
 */
-void crs_read_queue(crs_queue_cb_t* cb, void *data, int32_t timeout_ms, uint8_t *err_code)
-{
-    if(0 == timeout_ms) 
-	{
-		if (crs_failed == xQueueReceive(&(cb->queue_cb), data, CRS_WAIT_FOREVER)) 
-		{
+void dana_read_queue(dana_queue_cb_t* cb, void *data,  int32_t timeout_ms,
+		uint8_t *err_code){
+    if(0 == timeout_ms) {
+		if (OSQAccept(&(cb->queue_cb), data) < 0) {
 			*err_code=QUEUE_WRITE_FALI;
 			return;
-		} 
-		else 
-		{
+		} else {
 			*err_code = QUEUE_SUCCESS;
-			crs_dbg("crs_read_queue write suceess\n");
+			dana_dbg("dana_read_queue write suceess\n");
             return;
 		}
-    } 
-	else 
-	{
-		if (crs_failed == xQueueReceive(&(cb->queue_cb), data, timeout_ms)) 
-		{
+    } else {
+    	dana_sleep(timeout_ms);//如何设置超时？
+		if (OSQAccept(&(cb->queue_cb), data) < 0) {
 			*err_code=QUEUE_WRITE_FALI;
 			return;
-		} 
-		else 
-		{
+		} else {
 			*err_code = QUEUE_SUCCESS;
-			crs_dbg("crs_read_queue write suceess\n");
+			dana_dbg("dana_read_queue write suceess\n");
             return;
 		}
 	}
 }
+
  /*
 	function : 
 		销毁队列，并释放内存。			
@@ -181,7 +156,7 @@ void crs_destroy_queue(crs_queue_cb_t* cb, uint8_t *err_code)
 */
 int32_t crs_queue_count(crs_queue_cb_t *cb)
 {
-	return uxQueueMessagesWaiting(cb->queue_cb);
+
 }
 /*
 	function : 
@@ -193,7 +168,15 @@ int32_t crs_queue_count(crs_queue_cb_t *cb)
 		fail : 	返回
 */
 
-int32_t crs_queue_spaces_available(crs_queue_cb_t *cb)
+void dana_destroy_queue(dana_queue_cb_t* cb, uint8_t *err_code)
 {
-	return uxQueueSpacesAvailable(cb->queue_cb);
+	if (OSQDel((OS_EVENT *)&(cb->queue_cb), OS_DEL_NO_PEND, err_code) == NULL)
+	{
+		*err_code=QUEUE_DESTROY_FAIL;
+	}
+	else
+	{
+		*err_code=QUEUE_SUCCESS;
+		dana_free(cb);
+	}
 }

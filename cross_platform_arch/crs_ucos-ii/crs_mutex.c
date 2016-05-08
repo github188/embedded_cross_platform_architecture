@@ -62,7 +62,7 @@ crs_mutex_handler_t* crs_mutex_create()
 */
 int32_t crs_mutex_lock(crs_mutex_handler_t *mutex) 
 {
-	INT8U err;
+	int8_t err;
 	if (NULL == mutex) {
         return -1;
     }
@@ -99,7 +99,7 @@ int32_t crs_mutex_unlock(crs_mutex_handler_t *mutex) {
 */
 int32_t crs_mutex_destroy(crs_mutex_handler_t *mutex) 
 {
-	INT8U err;
+	int8_t err;
 	if (NULL == mutex) {
 			return -1;
 	}	

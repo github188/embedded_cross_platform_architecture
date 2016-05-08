@@ -1,5 +1,6 @@
 /*				linux
- *	原子操作
+ * crs_atomic.c
+ *	原子操作,原子性的加减
  */
 
 #include "crs_types.h"
@@ -25,7 +26,14 @@
 		success :
 		fail :
 */
-extern int32_t crs_atomic_set(void *ptr, int32_t val);
+extern int32_t crs_atomic_set(void *ptr, int32_t val)
+{
+	if( NULL == ptr )
+	{
+		crs_dbg(" ptr is NULL\r\n");
+		return 0;
+	}
+}
   /*
 	function :
 		原子的加或者减,对ptr所指向的数据进行原子的增加或者减小val(val为正数时为+,负数时为-)

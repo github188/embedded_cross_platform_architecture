@@ -1,13 +1,7 @@
-#ifndef _CRS_ATOMIC_H_
-#define _CRS_ATOMIC_H_
- /*
-	function :
-
-	input :
-	return value :
-		success :
-		fail :
-*/
+/*			FreeRTOS
+ * crs_atomic.c
+ * 原子操作，原子性的加减操作
+ */
 #include "crs_type.h"
 
 #ifdef __cplusplus

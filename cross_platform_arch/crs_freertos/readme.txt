@@ -1,4 +1,4 @@
-code for the linux
+code for freertos
 
-mem.c
-mutex.c
+//TODO
+atomic.c 

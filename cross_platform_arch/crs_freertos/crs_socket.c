@@ -303,14 +303,14 @@ extern int8_t* crs_inet_ntoa(const uint32_t ip)
     return str_ip;
 }
 
-
 /*
 	function :
-
+		将点分十进制的IP地址转换为32位的IP地址
 	input :
+		const int8_t* ip ： 点分十进制表示的IP地址
 	return value :
-		success :
-		fail :
+		success :	返回转换后的32位IP地址
+		fail : 	返回 -1
 */
 static char * crs_inet_aton(const int8_t *ip )
 {
@@ -528,11 +528,6 @@ extern crs_socket_handler_t *crs_accept(crs_socket_handler_t *sock)
 }
 
 /*
- * socket连接到服务器(ip+port，ip是以'\0'结尾的字符串)，超时时间为timeout_usec微秒
- * 返回值为0：表示连接成功
- * 返回值为-1：表示连接失败
- */
-/*
 	function :
 		socket连接到服务器
 	input :
@@ -665,13 +660,6 @@ extern int32_t crs_tcp_recv(crs_socket_handler_t *sock, void *buf, uint32_t n, u
     return 0;
 }
 
-
-/*
- * 发送数据buf[0:n)，超时时间为timeout_usec微秒
- * 返回值为-1：表示连接断开
- * 返回值为0：表示在timeout_usec时间内没有发送数据
- * 返回值为正数：表示发送的字节数
- */
 /*
 	function :
 		发送数据buf[0:n)
@@ -772,10 +760,6 @@ extern int32_t crs_tcp_socket_destroy(crs_socket_handler_t *sock)
 /*************************** udp 接口 *********************************/
 
 /*
- * 创建udp socket，绑定端口到port，（为了加快近场搜索，建议设置socket支持发送广播包, 组播包）
- * 注意port为本机字节序
- */
-/*
 	function :
 		创建一个UDP socket
 	input : 无
@@ -813,9 +797,7 @@ extern crs_socket_handler_t* crs_udp_socket_create()
 
     return sock;
 }
-/*
- * 加入组播组
- */
+
 /*
 	function :
 		加入组播组
@@ -916,15 +898,6 @@ extern int32_t crs_udp_recvfrom(crs_socket_handler_t *sock, char *ip, uint32_t i
     }
 }
 
-
-/*
- * 向ip:port发送数据：buf[0,n)， 超时时间为timeout_usec微秒
- * 注意port为本机字节序
- *
- * 返回值为-1：表示表示出错
- * 返回值为0：表示在timeout_usec时间内没有写入数据
- * 返回值为正数：表示发送的字节数
- */
 /*
 	function :
 		发送数据

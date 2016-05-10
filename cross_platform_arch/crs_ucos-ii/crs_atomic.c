@@ -1,21 +1,11 @@
-
- /*			ucos-ii
-  * crs_atomic.c
-  * 原子操作
+/*		ucos-ii
+ * crs_atomic.c
+ * 原子操作
 */
 #include "crs_type.h"
 #include "crs_atomic.h"
 
- /*
-	function :
-			
-	input :
-	return value :
-		success :
-		fail :
-*/
-//extern void crs_sync();
-   /*
+/*
 	function :
 		原子的赋值,对ptr所指向的数据原子的赋值为val
 	input :

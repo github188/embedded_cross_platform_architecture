@@ -18,7 +18,6 @@ struct crs_mutex_handler_s {
     OS_EVENT *mutex;
 };
 
-
  /*
 	function : 
 				分配内存并创建mutex,创建失败
@@ -49,7 +48,6 @@ crs_mutex_handler_t* crs_mutex_create()
 	    }
 	    return mutex;
 }
-
 
  /*
 	function : 

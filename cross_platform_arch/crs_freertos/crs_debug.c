@@ -12,9 +12,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-/*
-	debug打印可以选择性关闭和开启	
-*/
+
 static bool crs_dbg_flag = 0;
 /*
 	function : 
@@ -29,9 +27,6 @@ void crs_dbg_on( )
     crs_dbg_flag = 1;   
 }
 
-/*
-	进行调试信息的打印
-*/
 /*
 	function : 
 		crs_debug_on打印调试信息			

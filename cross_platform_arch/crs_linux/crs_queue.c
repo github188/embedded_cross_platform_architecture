@@ -14,14 +14,7 @@
 #include "message_queue.h"
 #include <stdlib.h>
 #include <string.h>
-/*
-	function : 
-					
-	input : 
-	return value : 
-		success :	
-		fail : 	
-*/
+
 struct crs_queue_cb
 {
 	struct message_queue queue_cb;
@@ -86,9 +79,7 @@ int32_t crs_trywrite_queue( crs_queue_cb_t* cb, void* data )
 	message_queue_write(&(cb->queue_cb),tmp);
 	return QUEUE_WRITE_SUCCESS;
 }
-/*
- *将data写入队列,根据timeout_ms判断是否阻塞，0表示阻塞，非0 表示超时时间
- */
+
  /*
 	function : 
 		将data写入队列			
@@ -208,4 +199,3 @@ int32_t crs_destroy_queue( crs_queue_cb_t* cb )
 		success :	返回空闲队列控制块的数目
 		fail : 	返回0
 */
-//int32_t crs_queue_count(crs_queue_cb_t *cb)

@@ -8,14 +8,6 @@
 #include "crs_time.h"
 
 #include <unistd.h>
- /*
-	function :
-
-	input :
-	return value :
-		success :
-		fail :
-*/
 /*
 	function :
 		获取开机启动时间 单位ms

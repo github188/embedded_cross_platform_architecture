@@ -1,5 +1,5 @@
 /*				linux
- * crs_file.c
+* crs_file.c
 *file management
 *文件操作
 */

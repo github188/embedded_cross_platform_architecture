@@ -2,14 +2,6 @@
  * crs_str.c
  *常见的操作字符串操作功能
 */
-/*
-	function : 
-					
-	args : 
-	return value : 
-		success :	
-		fail : 	
-*/
 #include "crs_types.h"
 #include "crs_str.h"
 

@@ -1,19 +1,20 @@
-/*
+/*			ucos-ii
 *socket management
 *socket通信
 */
+#include "crs_types.h"
+#include "crs_socket.h"
+#include "crs_debug.h"
+#include "crs_mem.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
 #include "sockets.h"
-#include "crs_socket.h"
-#include "crs_debug.h"
-#include "crs_mem.h"
 #include "netdb.h"
 #include "lwip/ip_addr.h"
- #include "crs_types.h"
+
 struct crs_socket_handler {
     int32_t fd;
     int32_t sock_type;
@@ -218,7 +219,6 @@ extern int32_t crs_getsock_info(crs_socket_handler_t *sock, crs_sock_info_t *soc
     return 0;
 }
 
-
 /*
 	function :
 		对应于给定主机名的ip地址
@@ -388,15 +388,8 @@ extern uint16_t crs_ntohs(uint16_t netlong)
     return ntohs(netlong);
 }
 
-
-//#define SOCK_STREAM 1
-//#define SOCK_DGRAM  0
-
 /*************************** tcp 接口 *********************************/
 
-/*
- * 创建tcp socket
- */
 /*
 	function :
 		创建TCPsocket
@@ -429,8 +422,6 @@ extern crs_socket_handler_t* crs_tcp_socket_create()
 			close(fd);
 			return NULL;
     }
-
-
     sock->fd = fd;
     sock->sock_type = SOCK_STREAM;
 
@@ -517,11 +508,6 @@ extern crs_socket_handler_t *crs_accept(crs_socket_handler_t *sock)
 }
 
 /*
- * socket连接到服务器(ip+port，ip是以'\0'结尾的字符串)，超时时间为timeout_usec微秒
- * 返回值为0：表示连接成功
- * 返回值为-1：表示连接失败
- */
-/*
 	function :
 		socket连接到服务器
 	input :
@@ -573,13 +559,6 @@ extern int32_t crs_tcp_connect(crs_socket_handler_t *sock, char *ip, uint16_t po
     return val;
 }
 
-
-/*
- * 从socket中接收数据到buf[0:n)中，超时时间为timeout_usec微秒
- * 返回值为-1：表示连接断开
- * 返回值为0：表示在timeout_usec时间内没有收到数据
- * 返回值为正数：表示读收到的字节数
- */
 /*
 	function :
 		从socket中接收数据到buf[0:n)中，超时时间为timeout_usec微秒
@@ -654,13 +633,6 @@ extern int32_t crs_tcp_recv(crs_socket_handler_t *sock, void *buf, uint32_t n, u
     return 0;
 }
 
-
-/*
- * 发送数据buf[0:n)，超时时间为timeout_usec微秒
- * 返回值为-1：表示连接断开
- * 返回值为0：表示在timeout_usec时间内没有发送数据
- * 返回值为正数：表示发送的字节数
- */
 /*
 	function :
 		发送数据buf[0:n)
@@ -684,9 +656,6 @@ extern int32_t crs_tcp_send(crs_socket_handler_t *sock, void *buf, uint32_t n, u
 	send_buf = buf;
 	___timeout = timeout_usec;
 	fd = sock->fd;
-	//dbg("FREE STACK SPACE:%d\r\n",uxTaskGetStackHighWaterMark());
-
-    //TODO 如果timeout_usec 为0 则直接进行发送一次
     if (0 == timeout_usec)
     {
           ret = send(fd, send_buf, send_len, 0);
@@ -739,10 +708,6 @@ extern int32_t crs_tcp_send(crs_socket_handler_t *sock, void *buf, uint32_t n, u
     return 0;
 }
 
-
-/*
- * 销毁 tcp socket
- */
 /*
 	function :
 		销毁 tcp socket
@@ -759,15 +724,7 @@ extern int32_t crs_tcp_socket_destroy(crs_socket_handler_t *sock)
     return 0;
 }
 
-
-
-
 /*************************** udp 接口 *********************************/
-
-/*
- * 创建udp socket，绑定端口到port，（为了加快近场搜索，建议设置socket支持发送广播包, 组播包）
- * 注意port为本机字节序
- */
 /*
 	function :
 		创建一个UDP socket
@@ -807,9 +764,6 @@ extern crs_socket_handler_t* crs_udp_socket_create()
     return sock;
 }
 /*
- * 加入组播组
- */
-/*
 	function :
 		加入组播组
 	input :
@@ -835,16 +789,6 @@ extern int32_t crs_udp_socket_join_multicast(crs_socket_handler_t *sock, char *i
 	return 0;
 }
 #endif
-/*
- * 接收数据，超时时间为timeout_usec微秒
- * ip: 用于保存对端ip, ip_len为ip缓冲区大小，ip为大端模式的字符串
- * port: 用于保存对端port，注意port为本机字节序
- * 接收到的数据写入到buf[0,n)中
- *
- * 返回值为-1：表示出错
- * 返回值为0：表示在timeout_usec时间内没有接收到数据
- * 返回值为正数：表示接收到的字节数
- */
 /*
 	function :
 		接收数据
@@ -918,15 +862,6 @@ extern int32_t crs_udp_recvfrom(crs_socket_handler_t *sock, char *ip, uint32_t i
     }
 }
 
-
-/*
- * 向ip:port发送数据：buf[0,n)， 超时时间为timeout_usec微秒
- * 注意port为本机字节序
- *
- * 返回值为-1：表示表示出错
- * 返回值为0：表示在timeout_usec时间内没有写入数据
- * 返回值为正数：表示发送的字节数
- */
 /*
 	function :
 		发送数据

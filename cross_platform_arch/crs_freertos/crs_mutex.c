@@ -22,7 +22,7 @@
 struct crs_mutex_handler
 {
 	mutex_t mutex;
-}
+};
 
  /*
 	function : 

@@ -15,10 +15,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <errno.h>
-/*
- * TCP socket，这里read与write函数，发者可以实现为阻塞或非阻塞模式，SDK并不关心
- * 内部维系了read与write，不关心具体实现是否阻塞
- */
  
 /*
 	function : 

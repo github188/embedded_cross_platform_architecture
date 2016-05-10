@@ -1,20 +1,13 @@
-/*
+/*		ucos-ii
 *sem.c
 *semaphore management
 *信号量的创建,使用,删除等
 */
-/*
-	function : 
-					
-	input : 
-	return value : 
-		success :	
-		fail : 	
-*/
-#include "semphr.h"
 #include "crs_mem.h"
 #include "crs_sem.h"
 #include "crs_types.h"
+
+#include "semphr.h"
 /*
 	function : 
 		信号量的handle			
@@ -51,7 +44,6 @@ crs_sem_handler_t * crs_sem_create()
 		crs_dbg("crs_sem.c vSemaphoreCreateBinary failed\r\n");
 		return NULL;
 	}
-
 	return crs_sem_handler;
 }
 
@@ -88,7 +80,7 @@ int32_t crs_sem_take(crs_sem_handler_t *sem)
 */
 int32_t crs_sem_give(crs_sem_handler_t *sem)
 {
-	int ret = xSemaphoreGive( sem_sem_cb );
+	int ret = xSemaphoreGive( sem -> sem_cb );
 	if(0 == ret)
 	{
 		crs_dbg("crs_sem_give falied\r\n");
@@ -112,4 +104,5 @@ int32_t crs_sem_give(crs_sem_handler_t *sem)
 void crs_sem_destroy(crs_sem_handler_t *sem)
 {
 	vSemaphoreDelete(sem -> sem_cb);
+	crs_free( sem );
 }

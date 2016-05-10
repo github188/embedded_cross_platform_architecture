@@ -1,19 +1,17 @@
-#include "crs_mem.h"
-#include "crs_types.h"
-#include "crs_task.h"
-/*
+/*			ucos-ii
 *crs_task.c
 *task management
 任务的创建, 删除
 */
+#include "crs_mem.h"
+#include "crs_types.h"
+#include "crs_task.h"
+
 /************************ task 接口 *********************************/
 struct crs_task_handler_s {
 	TaskHandle_t task_handle;
 };
 
-// ptask_t_is_valid
-// detach
-// join
  /*
 	function :
 
@@ -22,7 +20,8 @@ struct crs_task_handler_s {
 		success :
 		fail :
 */
-typedef crs_task_return_t (*crs_task_start_routine)(void *);
+typedef void crs_task_return_t ;
+typedef crs_task_return_t (*crs_task_entry)(void *);
 
 /*
 	function :
@@ -37,7 +36,7 @@ typedef crs_task_return_t (*crs_task_start_routine)(void *);
 		success :
 		fail :
 */
-extern crs_task_handler_t* crs_task_create(uint8_t priority, int32_t stack_size, crs_task_start_routine start_routine, void* arg)
+extern crs_task_handler_t* crs_task_create(uint8_t priority, int32_t stack_size, crs_task_entry start_routine, void* arg)
 {
 	crs_task_handler_t *crs_handle = NULL;
 	TaskHandle_t *xHandle = NULL;

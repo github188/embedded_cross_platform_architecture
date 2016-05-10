@@ -1,4 +1,4 @@
-/*
+/*			ucos-ii
 *time.c
 *time management
 *时间的管理,计时器使用

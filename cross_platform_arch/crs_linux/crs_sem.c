@@ -7,9 +7,10 @@
 #include "crs_types.h"
 #include "crs_mem.h"
 #include "crs_dbg.h"
+#include "crs_sem.h"
 
 #include <semaphore.h>
-#define crs_wait_forever 0xffffffffUL
+
 /*
 	function :
 		信号量的handle

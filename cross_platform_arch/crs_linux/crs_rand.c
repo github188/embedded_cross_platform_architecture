@@ -1,9 +1,11 @@
 /*			linux
+ * crs_rand.c
 *rand 和srand
 *随机数生成函数
 */
 
 #include "crs_types.h"
+#include "crs_rand.h"
 
 #include<stdlib.h>
 

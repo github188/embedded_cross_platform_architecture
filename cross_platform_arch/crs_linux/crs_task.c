@@ -1,4 +1,4 @@
-/*
+/*			linux
 *task.c
 *task management
 任务的创建, 删除etc
@@ -14,14 +14,6 @@
 
 /************************ task 接口 *********************************/
 
- /*
-	function :
-		task handler
-	input :
-	return value :
-		success :
-		fail :
-*/
 struct dana_thread_handler_s {
 	pthread_t task_id;
 };
@@ -35,7 +27,8 @@ struct dana_thread_handler_s {
 		success :
 		fail :
 */
-typedef void* (*run)(void *);
+typedef void* crs_task_return_t ;
+typedef crs_task_return_t (*crs_task_entry)(void *);
 
 
   /*
@@ -66,9 +59,7 @@ extern crs_task_handler_t* crs_task_create(uint8_t priority, int32_t stack_size,
 	}
 	ptask_detach(task -> taskid);
 	return task;
-
 }
-
 
 /*
 	function :

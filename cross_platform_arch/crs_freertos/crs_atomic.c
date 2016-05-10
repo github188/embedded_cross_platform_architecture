@@ -9,15 +9,6 @@ extern "C"
 {
 #endif
 
- /*
-	function :
-			
-	input :
-	return value :
-		success :
-		fail :
-*/
-//extern void crs_sync();
    /*
 	function :
 		原子的赋值,对ptr所指向的数据原子的赋值为val

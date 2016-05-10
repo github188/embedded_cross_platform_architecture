@@ -10,14 +10,7 @@
 #include <time.h>
 #include <stdarg.h>
 #include <stdlib.h>
-/*
-	function :
 
-	args :
-	return value :
-		success :
-		fail :
-*/
 /*
 	function : 
 			求字符串长度

@@ -3,14 +3,6 @@
 *debug manaement
 *调试的时候进行打印
 */
-/*
-	function : 
-					
-	input : 
-	return value : 
-		success :	
-		fail : 	
-*/
 
 #include "crs_types.h"
 #include "crs_mem.h"
@@ -39,9 +31,6 @@ void crs_dbg_on( )
     crs_dbg_flag = 1;   
 }
 
-/*
-	进行调试信息的打印
-*/
 /*
 	function : 
 		crs_debug_on打印调试信息			

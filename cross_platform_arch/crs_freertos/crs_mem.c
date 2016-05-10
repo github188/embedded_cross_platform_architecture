@@ -79,8 +79,8 @@ extern void *crs_memcpy(void *dest, const void *src, size_t n)
 			 int c : 所赋值的值
 			 size_t n : 字节数
 	return value : 
-		success :	
-		fail : 	
+		success :	s中前n字节内容被赋值为c，返回s地址
+		fail : 	返回NULL
 */
 extern void *crs_memset(void *s, int c, size_t n)
 {

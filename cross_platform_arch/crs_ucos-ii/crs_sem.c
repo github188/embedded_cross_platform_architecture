@@ -7,7 +7,7 @@
 #include "crs_sem.h"
 #include "crs_types.h"
 
-#include "semphr.h"
+#include "ucos_ii.h"
 /*
 	function : 
 		信号量的handle			
@@ -18,12 +18,12 @@
 */
 struct crs_sem_handler_s
 {
-	SemaphoreHandle_t sem_cb;
+	OS_EVENT *sem_cb;
 };
 
 /*
 	function : 
-		创建一个信号量			
+		创建一个信号量,初始值为0
 	input : 
 		无
 	return value : 
@@ -38,10 +38,10 @@ crs_sem_handler_t * crs_sem_create()
 		return NULL;
 	}
 
-	vSemaphoreCreateBinary(crs_sem_handler->sem_cb);
+	crs_sem_handler->sem_cb = OSSemCreate(1);
 	if(NULL == crs_sem_handler->sem_cb)
 	{
-		crs_dbg("crs_sem.c vSemaphoreCreateBinary failed\r\n");
+		crs_dbg("crs_sem.c OSSemCreate failed\r\n");
 		return NULL;
 	}
 	return crs_sem_handler;
@@ -56,12 +56,13 @@ crs_sem_handler_t * crs_sem_create()
 		success : 返回0
 		fail : 	返回-1
 */
-int32_t crs_sem_take(crs_sem_handler_t *sem)
+int32_t crs_sem_wait(crs_sem_handler_t *sem)
 {
-	int32_t ret = xSemaphoreTake( sem->sem_cb, crs_wait_forever );
-	if( 0 == ret )
+	int8_t perr;
+	OSSemPend( sem->sem_cb, crs_wait_forever, &perr);
+	if( OS_ERR_NONE != perr )
 	{
-		crs_dbg("crs_sem_take falied\r\n");
+		crs_dbg("crs_sem_wait falied\r\n");
 		return -1;
 	}
 	else
@@ -78,12 +79,12 @@ int32_t crs_sem_take(crs_sem_handler_t *sem)
 		success : return 0
 		fail : 	return -1
 */
-int32_t crs_sem_give(crs_sem_handler_t *sem)
+int32_t crs_sem_post(crs_sem_handler_t *sem)
 {
-	int ret = xSemaphoreGive( sem -> sem_cb );
-	if(0 == ret)
+	int ret = OSSemPost( sem -> sem_cb );
+	if(OS_ERR_NONE != ret)
 	{
-		crs_dbg("crs_sem_give falied\r\n");
+		crs_dbg("crs_sem_post falied\r\n");
 		return -1;
 	}
 	else
@@ -103,6 +104,10 @@ int32_t crs_sem_give(crs_sem_handler_t *sem)
 */
 void crs_sem_destroy(crs_sem_handler_t *sem)
 {
-	vSemaphoreDelete(sem -> sem_cb);
+	if( (OS_EVENT*)0 != OSSemDel(sem -> sem_cb) )
+	{
+		crs_dbg("crs_sem_destroy falied\r\n");
+		return;
+	}
 	crs_free( sem );
 }

@@ -26,7 +26,7 @@ struct crs_sem_handler
 
 /*
 	function :
-		创建一个信号量
+		创建一个信号量,初始值为0
 	input :
 		无
 	return value :
@@ -41,7 +41,7 @@ crs_sem_handler_t * crs_sem_create()
 		return NULL;
 	}
 	crs_memset( crs_sem_handler, 0, sizeof(crs_sem_handler_t));
-	sem_init( &(crs_sem_handler->sem_cb ), 1, 1);
+	sem_init( &(crs_sem_handler->sem_cb ), 1, 0);
 	return crs_sem_handler;
 }
 

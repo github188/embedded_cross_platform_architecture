@@ -33,7 +33,7 @@ struct crs_sem_handler_s
 
 /*
 	function : 
-		创建一个信号量			
+		创建一个信号量,初始值为0
 	input : 
 		无
 	return value : 
@@ -45,6 +45,7 @@ crs_sem_handler_t * crs_sem_create()
 	crs_sem_handler_t *crs_sem_handler = ( crs_sem_handler_t * )crs_malloc( sizeof( crs_sem_handler_t ) );
 	if ( NULL == crs_sem_handler )
 	{
+		crs_dbg("crs_sem.c vSemaphoreCreateBinary failed\r\n");
 		return NULL;
 	}
 

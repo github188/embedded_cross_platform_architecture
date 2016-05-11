@@ -14,7 +14,7 @@
 *		宏定义为1表示进行测试
 ********************************************************************/
 #define test_mutex 1
-
+#define test_sem 1
 
 /*******************************************************************
 *					global variables
@@ -65,8 +65,14 @@ void task_b_mutex(void *args)
 * 值没有重复，并且不断增加* ,说明mutex有保护临界资源cnt的访问，若有出现  *
 * 重复的cnt的值，说明mutex没有起到作用								 *
 ********************************************************************/
-void task_and_mutex_test()
+void mutex_test()
 {
+	crs_lock = crs_mutex_create();
+	if( NULL == crs_lock )
+	{
+		crs_dbg("crs_lock create falied\r\n");
+		return 0;
+	}
 	crs_task_handler_t *handler_a = NULL, *handler_b = NULL;
 	handler_a = crs_task_create(1, 1024, task_a_mutex, NULL);
 	if(NULL == handler_a)
@@ -84,26 +90,52 @@ void task_and_mutex_test()
 
 /*******************************************************************
 *					test semaphore in multitasks
-*现在镜头拉向公交车，有两个任务 公交车司机 -- Jonny 和	售票员 Sara
-*Jonny正常情况下在开车，Sara负责售票
+*现在镜头拉向公交车，有两个任务 公交车司机 -- Edward  和	售票员 Sara
+*Edward 正常情况下在开车，Sara负责售票
 *
-*当汽车到站时，Jonny停车开门，并告诉Sare当乘客都上车后告诉他一下，当前乘
-*客上车，当乘客都上车之后，Sare告诉Jonny，可以开车了，然后Jonny就开车
+*当汽车到站时，Edward 停车开门，并告诉Sare当乘客都上车后告诉他一下，当前乘
+*客上车，当乘客都上车之后，Sare告诉Edward ，可以开车了，然后Edward 就开车
 *
 ********************************************************************/
 
-void DriverJonny(void *args)
+void DriverEdward (void *args)
 {
-
+	crs_printf("hello,I am driver Edward \r\n");
+	while( true )
+	{
+		crs_printf(" OK, dididi...,I am a Happy bus driver:)\r\n");
+		crs_sem_wait( bus_arrive_station );
+		crs_printf("Sara, bus is at the station, I have opend the door\r\n");
+		crs_sem_post( bus_door_open );
+		crs_printf("If passegners are all abord,please tell me\r\n");
+		crs_sem_wait( passenger_aboard );
+	}
 }
+
 void TicketSellerSara(void *args)
 {
-
+	crs_printf( " hello, I am Sara\r\n");
+	while( true )
+	{
+		crs_sem_wait(bus_door_open);
+		crs_printf("各位乘客，上车请注意，下车请走好\r\n");
+		crs_printf("您好，请买票:)\r\n");
+		//睡眠20毫秒表示乘客正在上车和下车中，买票也正在进行中
+		crs_sleep(20);
+		//乘客上下车完毕
+		crs_sem_post(passenger_aboard);
+		crs_printf("Edward, passengers all aboard\r\n");
+	}
 }
 void BusStation(void *args)
 {
-	crs_printf(" Bus is at station !\r\n");
-	crs_sem_post( bus_arrive_station );
+	while(true)
+	{
+		crs_printf(" Bus is at station !\r\n");
+		crs_sem_post( bus_arrive_station );
+		//睡眠50毫秒，表示车子正在路上开，还没到站，等50毫秒会到达下一站
+		crs_sleep(50);
+	}
 }
 void semaphore_test()
 {
@@ -119,10 +151,10 @@ void semaphore_test()
 		return;
 	}
 
-	handler_jon = crs_task_create(1, 1024, DriverJonny, NULL);
+	handler_jon = crs_task_create(1, 1024, DriverEdward , NULL);
 	if(NULL == handler_bus)
 	{
-		crs_dbg("semaphore_test crs_task_create DriverJonny failed\r\n");
+		crs_dbg("semaphore_test crs_task_create DriverEdward  failed\r\n");
 		return;
 	}
 
@@ -133,16 +165,17 @@ void semaphore_test()
 		return;
 	}
 }
+
+
 int main()
 {
-	crs_lock = crs_mutex_create();
-	if( NULL == crs_lock )
-	{
-		crs_dbg("crs_lock create falied\r\n");
-		return 0;
-	}
+
 #if test_mutex
-	task_test_mutex();
+	mutex_test();
+#endif
+
+#if test_sem
+	semaphore_test();
 #endif
 
 	return 0;

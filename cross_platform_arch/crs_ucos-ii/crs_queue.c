@@ -22,6 +22,8 @@ struct crs_queue_cb_s{
 crs_queue_cb_t *crs_create_queue(int8_t queue_size, int16_t element_size,uint8_t *err_code)
 {
 	crs_queue_cb_t *queue=NULL;
+	void **MessageStorage = (void **)crs_malloc(queue_size * element_size);
+
 	queue=(crs_queue_cb_t *) crs_malloc(sizeof(crs_queue_cb_t));
 	queue->queue_cb->OSEventType = OS_EVENT_TYPE_Q;
 
@@ -30,7 +32,8 @@ crs_queue_cb_t *crs_create_queue(int8_t queue_size, int16_t element_size,uint8_t
 		*err_code = QUEUE_CREATE_FAIL;
 		return NULL;
 	}
-	queue->queue_cb = OSQCreate(queue_size, element_size);
+	crs_memset( *MessageStorage, 0, queue_size * element_size);
+	queue->queue_cb = OSQCreate(MessageStorage, element_size);
 	if(queue->queue_cb != 0)
 	{
 		*err_code = QUEUE_CREATE_SUCCESS;
@@ -54,34 +57,28 @@ crs_queue_cb_t *crs_create_queue(int8_t queue_size, int16_t element_size,uint8_t
 		fail : 	
 */
 
-void crs_write_queue(crs_queue_cb_t* cb, void* message, int32_t timeout_ms,uint8_t *err_code)
+int32_t crs_write_queue(crs_queue_cb_t* cb, void* message, int32_t timeout_ms)
 {
     if(0 == timeout_ms)
     {
-		if (osi_MsgQWrite(&(cb->queue_cb), message, OSI_WAIT_FOREVER) < 0)
+		if ( OSQPost(cb->queue_cb, message) < 0 )
 		{
-			*err_code = QUEUE_WRITE_FAIL;
-			return ;
+			return QUEUE_WRITE_FAIL;
 		}
 		else
 		{
-			*err_code = QUEUE_WRITE_SUCCESS;
-			crs_dbg("crs_write_queue write suceess\n");
-            return;
+            return QUEUE_WRITE_SUCCESS;
 		}
     }
     else
     {
-		if (osi_MsgQWrite(&(cb->queue_cb), message, timeout_ms) < 0)
+    	if ( OSQPost(cb->queue_cb, message) < 0 )
 		{
-			*err_code = QUEUE_WRITE_FAIL;
-			return ;
+			return QUEUE_WRITE_FAIL;
 		}
 		else
 		{
-			*err_code = QUEUE_WRITE_SUCCESS;
-			crs_dbg("crs_write_queue write suceess\n");
-            return;
+			return QUEUE_WRITE_SUCCESS;
 		}
 	}
 }
@@ -97,35 +94,28 @@ void crs_write_queue(crs_queue_cb_t* cb, void* message, int32_t timeout_ms,uint8
 		success :	
 		fail : 	
 */
-void crs_read_queue(crs_queue_cb_t* cb, void *data,  int32_t timeout_ms, uint8_t *err_code)
+int32_t crs_read_queue(crs_queue_cb_t* cb, void *data,  int32_t timeout_ms)
 {
     if(0 == timeout_ms)
     {
-		if (OSQAccept(&(cb->queue_cb), data) < 0)
+		if (OSQPend(&(cb->queue_cb), data) < 0)
 		{
-			*err_code=QUEUE_READ_FAIL;
-			return;
+			return QUEUE_READ_FAIL;
 		}
 		else
 		{
-			*err_code = QUEUE_READ_SUCCESS;
-			crs_dbg("crs_read_queue write suceess\n");
-            return;
+            return QUEUE_READ_SUCCESS;
 		}
     }
     else
     {
-    	crs_sleep(timeout_ms);//如何设置超时？
-		if (OSQAccept(&(cb->queue_cb), data) < 0)
+		if (OSQPend(&(cb->queue_cb), data) < 0)
 		{
-			*err_code=QUEUE_READ_FAIL;
-			return;
+			return QUEUE_READ_FAIL;
 		}
 		else
 		{
-			*err_code = QUEUE_READ_SUCCESS;
-			crs_dbg("crs_read_queue write suceess\n");
-            return;
+            return QUEUE_READ_SUCCESS;
 		}
 	}
 }
@@ -154,15 +144,15 @@ int32_t crs_queue_count(crs_queue_cb_t *cb)
 		fail : 	返回
 */
 
-void crs_destroy_queue(crs_queue_cb_t* cb, uint8_t *err_code)
+int32_t crs_destroy_queue(crs_queue_cb_t* cb)
 {
-	if (OSQDel((OS_EVENT *)&(cb->queue_cb), OS_DEL_NO_PEND, err_code) == NULL)
+	if ( (OS_EVENT *)0 == OSQDel((OS_EVENT *)&(cb->queue_cb), OS_DEL_NO_PEND, err_code))
 	{
-		*err_code=QUEUE_DESTROY_FAIL;
+		return QUEUE_DESTROY_FAIL;
 	}
 	else
 	{
-		*err_code=QUEUE_DESTROY_SUCCESS;
 		crs_free(cb);
+		return QUEUE_DESTROY_SUCCESS;
 	}
 }

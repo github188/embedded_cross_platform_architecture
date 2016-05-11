@@ -1,4 +1,4 @@
-/*
+/*		freertos
 *crs_queue.h
 *queue management
 *队列的创建,使用和删除等
@@ -21,25 +21,16 @@
 struct crs_queue_cb_s{
 	QueueHandle_t queue_cb;
 };
- /*
-	function : 
-					
-	input : 
-	return value : 
-		success :	
-		fail : 	
-*/
-
 /*
- * 创建队列，分配内存，并初始化
- */
- /*
 	function : 
-					
+		创建队列，分配内存，并初始化
 	input : 
+		int8_t queue_size : 队列的元素的个数
+		nt16_t element_size ：队列中每个元素的大小
+		uint8_t *err_code ：错误码，返回创建队列时返回的信息
 	return value : 
-		success :	
-		fail : 	
+		success :	返回所创建的队列的指针
+		fail : 	返回NULL
 */
 crs_queue_cb_t *crs_create_queue(int8_t queue_size, int16_t element_size, uint8_t *err_code)
 {
@@ -71,9 +62,7 @@ crs_queue_cb_t *crs_create_queue(int8_t queue_size, int16_t element_size, uint8_
 		return (crs_queue_cb_t)queue;
 	}
 }
-/*
- *将message写入队列,根据timeout_ms判断是否阻塞，0表示阻塞，非0 表示超时时间
- */
+
  /*
 	function : 
 		将message写入队列			
@@ -83,36 +72,25 @@ crs_queue_cb_t *crs_create_queue(int8_t queue_size, int16_t element_size, uint8_
 		success :	
 		fail : 	
 */
-void crs_queue_write(crs_queue_cb_t* cb, void* message, int32_t timeout_ms, uint8_t *err_code)
+int32_t crs_write_queue(crs_queue_cb_t* cb, void* message, int32_t timeout_ms)
 {
-    if(0 == timeout_ms) 
-	{	//equivalent to xQueueSendToBack()
-		if (crs_failed == xQueueSend(&(cb->queue_cb), message, CRS_WAIT_FOREVER)) 
-		{
-			*err_code = QUEUE_WRITE_FAIL;
-			return ;
-		} 
-		else 
-		{
-			*err_code = QUEUE_WRITE_FAIL;
-			crs_dbg("crs_write_queue write suceess\n");
-            return;
-		}
-    } 
-	else 
+    int tmp = 0;
+    if(0 == timeout_ms)
+    {
+        while( pdPASS != ( tmp = xQueueSend(cb->queue_cb, message, os_msec_to_ticks(1000*1000)) ) )
+        {
+        	crs_dbg("try write queue......\r\n");
+        }
+        return QUEUE_WRITE_SUCCESS;
+    }
+    tmp = xQueueSend(cb->queue_cb, message, os_msec_to_ticks(timeout_ms));
+
+	if(pdPASS != tmp)
 	{
-		if (crs_failed == xQueueSend(&(cb->queue_cb), message, timeout_ms)) 
-		{
-			*err_code=QUEUE_WRITE_FAIL;
-			return ;
-		} 
-		else 
-		{
-			*err_code = QUEUE_SUCCESS;
-			crs_dbg("crs_write_queue write suceess\n");
-            return;
-		}
+		crs_dbg("crs_write_queue write failed\r\n");
+		return QUEUE_WRITE_FAIL;
 	}
+    return QUEUE_WRITE_SUCCESS;
 }
  /*
 	function : 
@@ -130,28 +108,22 @@ void crs_read_queue(crs_queue_cb_t* cb, void *data, int32_t timeout_ms, uint8_t 
 {
     if(0 == timeout_ms) 
 	{
-		if (crs_failed == xQueueReceive(&(cb->queue_cb), data, CRS_WAIT_FOREVER)) 
-		{
-			*err_code = QUEUE_WRITE_FAIL;
-			return;
-		} 
-		else 
-		{
-			*err_code = QUEUE_SUCCESS;
-			crs_dbg("crs_read_queue write suceess\n");
-            return;
-		}
+    	 while(pdPASS != (tmp = xQueueReceive(cb->queue_cb, data, os_msec_to_ticks(100))))
+    	 {
+    		 crs_dbg("try read queue......\r\n");
+    	 }
+    	 return QUEUE_READ_SUCCESS;
     } 
 	else 
 	{
-		if (crs_failed == xQueueReceive(&(cb->queue_cb), data, timeout_ms)) 
+		if ( pdPASS != xQueueReceive(&(cb->queue_cb), data, timeout_ms))
 		{
-			*err_code=QUEUE_WRITE_FAIL;
+			*err_code=QUEUE_READ_FAIL;
 			return;
 		} 
 		else 
 		{
-			*err_code = QUEUE_SUCCESS;
+			*err_code = QUEUE_READ_SUCCESS;
 			crs_dbg("crs_read_queue write suceess\n");
             return;
 		}
@@ -169,9 +141,9 @@ void crs_read_queue(crs_queue_cb_t* cb, void *data, int32_t timeout_ms, uint8_t 
 */
 int32_t crs_destroy_queue(crs_queue_cb_t* cb, uint8_t *err_code)
 {
-	vQueueDelete( (QueueHandle_t)(&(cb->queue_cb)) );
+	vQueueDelete( cb->queue_cb );
 	crs_free(cb);
-	*err_code = QUEUE_SUCCESS;
+	return QUEUE_DESTROY_SUCCESS;
 }
 
 /*

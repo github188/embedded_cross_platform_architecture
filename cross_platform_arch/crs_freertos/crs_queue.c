@@ -104,7 +104,7 @@ int32_t crs_write_queue(crs_queue_cb_t* cb, void* message, int32_t timeout_ms)
 		success :	
 		fail : 	
 */
-void crs_read_queue(crs_queue_cb_t* cb, void *data, int32_t timeout_ms, uint8_t *err_code)
+int32_t crs_read_queue(crs_queue_cb_t* cb, void *data, int32_t timeout_ms, uint8_t *err_code)
 {
     if(0 == timeout_ms) 
 	{
@@ -118,14 +118,11 @@ void crs_read_queue(crs_queue_cb_t* cb, void *data, int32_t timeout_ms, uint8_t 
 	{
 		if ( pdPASS != xQueueReceive(&(cb->queue_cb), data, timeout_ms))
 		{
-			*err_code=QUEUE_READ_FAIL;
-			return;
+			return QUEUE_READ_FAIL;
 		} 
 		else 
 		{
-			*err_code = QUEUE_READ_SUCCESS;
-			crs_dbg("crs_read_queue write suceess\n");
-            return;
+            return QUEUE_READ_SUCCESS;
 		}
 	}
 }

@@ -26,7 +26,11 @@ void productor(void *args)
 {
 	while( true )
 	{
-		crs_write_queue(product_line, )
+		int ret = crs_write_queue( product_line, "yummy ice cream", 0 );
+		if(QUEUE_WRITE_SUCCESS == ret)
+		{
+			crs_dbg("product ice cream\r\n");
+		}
 	}
 }
 
@@ -34,7 +38,12 @@ void consumer(void *args)
 {
 	while( true )
 	{
-
+		int8_t *data = (int8_t *)crs_malloc(100);
+		int ret = crs_read_queue( product_line, data, 0);
+		if( QUEUE_READ_SUCCESS == ret )
+		{
+			crs_printf("consumer get : %s \r\n",data);
+		}
 	}
 }
 

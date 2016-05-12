@@ -153,6 +153,15 @@ extern int32_t crs_file_get_info(crs_file_handler_t *file, file_info_t *finfo)
 		crs_dbg("file info is NULL\r\n");
 		return -1;
 	}
+	if(NULL == finfo)
+	{
+		finfo = (file_info_t *)crs_malloc(sizeof(file_info_t));
+		if(NULL == finfo)
+		{
+			crs_dbg("crs_file_get_info crs_malloc finfo failed\r\n");
+			return -1;
+		}
+	}
 	crs_memcpy( finfo, file -> finfo, sizeof(file_info_t) );
 	return 0;
 }
